@@ -9,6 +9,8 @@ Reisswig's
 
 ## Requirements
 
+The Python Waveform Analysis Tools are compatible with Python3 (Old versions of watpy were Python2 compatible).
+
 The following Python packages are required for installation:
 
 * [Numpy](https://numpy.org/) (Python array-handler)
