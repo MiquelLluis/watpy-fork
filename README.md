@@ -7,6 +7,20 @@ Reisswig's
 [pyGWAnalysis](http://svn.einsteintoolkit.org/pyGWAnalysis/trunk/) 
 
 
+## Requirements
+
+The following Python packages are required for installation:
+
+* [Numpy](https://numpy.org/) (Python array-handler)
+* [Scipy](https://www.scipy.org/) (Python scientific library)
+* [Matplotlib](https://matplotlib.org/) (Nice visualization package)
+* [H5py](https://www.h5py.org/) (Pythonic interface to HDF5)
+
+For users interested in interactive usage of this package we suggest ipyhton notebooks. These can be installed with the following packages:
+
+* [iPython](https://ipython.org/) (Strictly better version of the basic python shell)
+* [Jupyter](https://jupyter.org/) (Notebooks, slides, HTML conversion of notebooks and more)
+
 ## Content
 
     + watpy/		Top-level package
