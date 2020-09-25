@@ -12,5 +12,3 @@ setup(
     packages = ['base', 'db_utilities'],
     requires = ['h5py', 'numpy', 'matplotlib'],
 )
-['h5py', 'numpy', 'scipy', 'matplotlib'],
-)
