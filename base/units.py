@@ -1,4 +1,3 @@
-
 import math
 
 class Units:
@@ -107,4 +106,4 @@ TEX_KM    = r'\mathrm{km}'
 TEX_MS    = r'\mathrm{ms}'
 TEX_GAUSS = r'\mathrm{G}'
 TEX_MEV   = r'\mathrm{MeV}'
-TEX_DENS_CGS = r'\mathrm{g}/\mathrm{cm}^{3}'}^{3}'
+TEX_DENS_CGS = r'\mathrm{g}/\mathrm{cm}^{3}'
