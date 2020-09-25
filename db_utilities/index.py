@@ -140,30 +140,4 @@ class CoRe_index:
         #
         return py_dict
     #
-#      that have the given value for the given key as 
-        a python dictionary.
-        """
-        subset = {}
-        for sim in self.dict:
-            entry = self.dict[sim]
-            if entry[key] == value:
-                subset[sim] = entry
-            #
-        #
-        return subset
-    #            
-    
-    def list_to_dict(self, i_list):
-        """
-        Ports a list of python dictionaries into a dictionary
-        where the main keys are the database_key values of the 
-        single dictionaries (easier to sort).
-        """
-        py_dict = {}
-        for entry in i_list:
-            key = entry['database_key']
-            py_dict[key] = entry
-        #
-        return py_dict
-    #
 #
