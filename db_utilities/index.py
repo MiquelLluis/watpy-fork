@@ -92,7 +92,7 @@ class CoRe_index:
     #
 
     
-    def sync_database(self, path=None, db_list=None, verbose=True):
+    def sync_database(self, path=None, db_list=None, verbose=True, lfs=False):
         """
         Syncronizes the entries specified by the db_list argument:
          - Found entries are updated with the git repository
@@ -105,9 +105,15 @@ class CoRe_index:
         for sim in db_list:
             repo = sim.replace(':','_')
             if os.path.isdir(os.path.join(path, repo)):
-                self.pull(dbdir=repo, verbose=verbose)
+                if lfs:
+                    self.pull(dbdir=repo, verbose=verbose, lfs=lfs)
+                else:
+                    self.pull(dbdir=repo, verbose=verbose)
             else:
-                self.clone(dbdir=repo, verbose=verbose)
+                if lfs:
+                    self.clone(dbdir=repo, verbose=verbose, lfs=lfs)
+                else:
+                    self.clone(dbdir=repo, verbose=verbose)
             #
         #
     #   
