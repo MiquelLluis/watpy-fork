@@ -64,7 +64,7 @@ class CoRe_index:
         """
         Clones the git repository of the index at self.path
         """
-        git_repo = 'git@10.140.115.145:core_database/%s.git' % dbdir
+        git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
         out, err = run(['git', 'clone', git_repo], self.path, True)
         if verbose:
             print(out, err)
