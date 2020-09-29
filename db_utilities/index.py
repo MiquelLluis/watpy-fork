@@ -50,10 +50,10 @@ class CoRe_index:
         self.path = path
         if not os.path.isdir(os.path.join(self.path,'core_database_index')):
             print("Index not found, cloning...\n")
-            self.clone(verbose=verbose, lfs)
+            self.clone(verbose=verbose, lfs=lfs)
         else:
             print("Index found, updating...\n")
-            self.pull(verbose=verbose, lfs)
+            self.pull(verbose=verbose, lfs=lfs)
         #
         self.list = self.read_index()
         self.dict = self.list_to_dict(self.list)
