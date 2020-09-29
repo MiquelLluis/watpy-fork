@@ -9,6 +9,11 @@ The [CoRe](http://www.computational-relativity.org/) python package for the anal
 
 The Python Waveform Analysis Tools are compatible with Python3 (Old versions of watpy were Python2 compatible).
 
+Albeit WatPy is a Python package, it requires the following to be able to properly interface with the database:
+
+* [git](https://git-scm.com/) version control system
+* [git-lfs](https://git-lfs.github.com/) API (Large File Storage)
+
 The following Python packages are required for installation:
 
 * [Numpy](https://numpy.org/) (Python array-handler)
