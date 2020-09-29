@@ -1,11 +1,9 @@
 # Python Waveform Analysis Tools
 
-A python package for the analysis of gravitational waves based on
+The [CoRe](http://www.computational-relativity.org/) python package for the analysis of gravitational waves based on
 [scidata](https://bitbucket.org/dradice/scidata/src/default/),
-[Matlab's WAT](https://bitbucket.org/bernuzzi/wat/src/master/) and
-Reisswig's
+[Matlab's WAT](https://bitbucket.org/bernuzzi/wat/src/master/) and 
 [pyGWAnalysis](http://svn.einsteintoolkit.org/pyGWAnalysis/trunk/) 
-
 
 ## Requirements
 
@@ -45,15 +43,15 @@ For users interested in interactive usage of this package we suggest ipyhton not
     |    | DB_tutorial.ipynb    Jupyter notebook with a step-by-step tutorial on how to use the tool and the database
     |    | DB_tutorial.html     HTML version of the tutorial (for non-jupyter users; NB: NOT interactive)
     
-
 ## Features
 
- * Classes for single pole / Multipoles data
- * Gravitational Wave energy and angular momentum calculation routines
+ * Classes for multipolar waveform data
+ * Classes to work with the CoRe database
+ * Gravitational-wave energy and angular momentum calculation routines
  * Psi4-to-h via FFI or time integral routines
  * Waveform alignment and phasing routines
  * Waveform interpolation routines
- * Waveform spectra calculation
+ * Waveform's spectra calculation
  * Richardson extrapolation
  * Wave objects contain already information on merger quantities (time, frequency)
  * Unit conversion package
