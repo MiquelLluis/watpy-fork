@@ -46,37 +46,46 @@ class CoRe_index:
     Contains routines to manage and manipulate the database index, 
     as well as 
     """
-    def __init__(self, path, verbose=True):
+    def __init__(self, path, lfs=False, verbose=True):
         self.path = path
         if not os.path.isdir(os.path.join(self.path,'core_database_index')):
             print("Index not found, cloning...\n")
-            self.clone(verbose=verbose)
+            self.clone(verbose=verbose, lfs)
         else:
             print("Index found, updating...\n")
-            self.pull(verbose=verbose)
+            self.pull(verbose=verbose, lfs)
         #
         self.list = self.read_index()
         self.dict = self.list_to_dict(self.list)
         
     #
       
-    def clone(self, dbdir='core_database_index', verbose=True):
+    def clone(self, dbdir='core_database_index', verbose=True, lfs=False):
         """
         Clones the git repository of the index at self.path
         """
-        git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
-        out, err = run(['git', 'clone', git_repo], self.path, True)
+        if lfs:
+            git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
+            out, err = run(['git', 'lfs', 'clone', git_repo], self.path, True)
+        #
+        else:
+            git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
+            out, err = run(['git', 'clone', git_repo], self.path, True)
         if verbose:
             print(out, err)
         #
     #
     
-    def pull(self, dbdir='core_database_index', verbose=True):
+    def pull(self, dbdir='core_database_index', verbose=True, lfs=False):
         """
         Pulls changes in the git repository of the index at self.path
         """
         workdir  = os.path.join(self.path, dbdir)
-        out, err = run(['git', 'pull', 'origin', 'master'], workdir, True)
+        if lfs:
+            out, err = run(['git', 'lfs', 'install'], workdir, True)
+            out, err = run(['git', 'lfs', 'pull', 'origin', 'master'], workdir, True)
+        else:
+            out, err = run(['git', 'pull', 'origin', 'master'], workdir, True)
         if verbose:
             print(out, err)
         #
