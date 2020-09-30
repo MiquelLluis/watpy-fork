@@ -46,11 +46,11 @@ class CoRe_index:
     Contains routines to manage and manipulate the database index, 
     as well as 
     """
-    def __init__(self, path, lfs=False, verbose=True):
+    def __init__(self, path, lfs=False, verbose=True, prot='ssh'):
         self.path = path
         if not os.path.isdir(os.path.join(self.path,'core_database_index')):
             print("Index not found, cloning...\n")
-            self.clone(verbose=verbose, lfs=lfs)
+            self.clone(verbose=verbose, lfs=lfs, protocol=prot)
         else:
             print("Index found, updating...\n")
             self.pull(verbose=verbose, lfs=lfs)
@@ -60,16 +60,25 @@ class CoRe_index:
         
     #
       
-    def clone(self, dbdir='core_database_index', verbose=True, lfs=False):
+    def clone(self, dbdir='core_database_index', verbose=True, lfs=False,
+                protocol='ssh'):
         """
         Clones the git repository of the index at self.path
         """
         if lfs:
-            git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
+            if protocol=='ssh':
+                git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
+            elif protocol=='http':
+                git_repo = 'http://core-gitlfs.tpi.uni-jena.de/core_database/%s.git' % dbdir
+            #
             out, err = run(['git', 'lfs', 'clone', git_repo], self.path, True)
         #
         else:
-            git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
+            if protocol=='ssh':
+                git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
+            elif protocol=='http':
+                git_repo = 'http://core-gitlfs.tpi.uni-jena.de/core_database/%s.git' % dbdir
+            #
             out, err = run(['git', 'clone', git_repo], self.path, True)
         if verbose:
             print(out, err)
@@ -92,7 +101,8 @@ class CoRe_index:
     #
 
     
-    def sync_database(self, path=None, db_list=None, verbose=True, lfs=False):
+    def sync_database(self, path=None, db_list=None, verbose=True, lfs=False,
+                        prot='ssh'):
         """
         Syncronizes the entries specified by the db_list argument:
          - Found entries are updated with the git repository
@@ -111,9 +121,11 @@ class CoRe_index:
                     self.pull(dbdir=repo, verbose=verbose)
             else:
                 if lfs:
-                    self.clone(dbdir=repo, verbose=verbose, lfs=lfs)
+                    self.clone(dbdir=repo, verbose=verbose, lfs=lfs,
+                                 protocol=prot)
                 else:
-                    self.clone(dbdir=repo, verbose=verbose)
+                    self.clone(dbdir=repo, verbose=verbose, 
+                                 protocol=prot)
             #
         #
     #   
