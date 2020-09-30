@@ -13077,7 +13077,7 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="WATPY---CoRe-Database-Tutorial">WATPY - CoRe Database Tutorial<a class="anchor-link" href="#WATPY---CoRe-Database-Tutorial">&#182;</a></h1><p>The watpy tool is still only Python2 compatible. Requires basic packages like <em>numpy</em> and <em>matplotlib</em> to function properly. Please install the package before trying this tutorial with</p>
+<h1 id="WATPY---CoRe-Database-Tutorial">WATPY - CoRe Database Tutorial<a class="anchor-link" href="#WATPY---CoRe-Database-Tutorial">&#182;</a></h1><p>The watpy tool is Python3 compatible. Requires basic packages like <em>numpy</em> and <em>matplotlib</em> to function properly (see README). Please install the package before trying this tutorial with</p>
 <p><em>sudo python setup.py install</em></p>
 <p>or</p>
 <p><em>python setup.py install --user</em></p>
@@ -13124,7 +13124,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># This path can be an absolute or relative to the working directory</span>
@@ -13134,6 +13134,26 @@ div#notebook {
 </pre></div>
 
     </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+    <div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Index found, updating...
+
+ 
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -13149,7 +13169,7 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">idb</span><span class="o">.</span><span class="n">sync_database</span><span class="p">(</span><span class="n">lfs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
