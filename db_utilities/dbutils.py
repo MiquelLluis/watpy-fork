@@ -17,9 +17,9 @@ import datetime
 import os, sys
 import re
 
-import h5_utils as h5u
-import metadata_utils as mdu 
-import simlist_utils as slu
+import db_utilities.h5_utils as h5u
+import db_utilities.metadata_utils as mdu 
+import db_utilities.simlist_utils as slu
 
 
 class CoRe_database():
