@@ -5,7 +5,7 @@ import warnings as wrn
 try:
     from scipy import factorial2
 except:  
-    from scipy.misc import factorial2
+    from scipy.special import factorial2
 
 # ------------------------------------------------------------------
 # Physics utilities 
