@@ -68,16 +68,20 @@ class CoRe_index:
         if lfs:
             if protocol=='ssh':
                 git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
-            elif protocol=='http':
-                git_repo = 'http://core-gitlfs.tpi.uni-jena.de/core_database/%s.git' % dbdir
+            elif protocol=='https':
+                git_repo = 'https://core-gitlfs.tpi.uni-jena.de/core_database/%s.git' % dbdir
+            else:
+                raise NameError("Protocol not supported!")
             #
             out, err = run(['git', 'lfs', 'clone', git_repo], self.path, True)
         #
         else:
             if protocol=='ssh':
                 git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
-            elif protocol=='http':
-                git_repo = 'http://core-gitlfs.tpi.uni-jena.de/core_database/%s.git' % dbdir
+            elif protocol=='https':
+                git_repo = 'https://core-gitlfs.tpi.uni-jena.de/core_database/%s.git' % dbdir
+            else:
+                raise NameError("Protocol not supported!")
             #
             out, err = run(['git', 'clone', git_repo], self.path, True)
         if verbose:
