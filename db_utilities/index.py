@@ -46,7 +46,7 @@ class CoRe_index:
     Contains routines to manage and manipulate the database index, 
     as well as 
     """
-    def __init__(self, path, lfs=False, verbose=True, prot='ssh'):
+    def __init__(self, path, lfs=False, verbose=True, prot='https'):
         self.path = path
         if not os.path.isdir(os.path.join(self.path,'core_database_index')):
             print("Index not found, cloning...\n")
@@ -61,7 +61,7 @@ class CoRe_index:
     #
       
     def clone(self, dbdir='core_database_index', verbose=True, lfs=False,
-                protocol='ssh'):
+                protocol='https'):
         """
         Clones the git repository of the index at self.path
         """
@@ -106,7 +106,7 @@ class CoRe_index:
 
     
     def sync_database(self, path=None, db_list=None, verbose=True, lfs=False,
-                        prot='ssh'):
+                        prot='https'):
         """
         Syncronizes the entries specified by the db_list argument:
          - Found entries are updated with the git repository
