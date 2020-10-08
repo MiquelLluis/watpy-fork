@@ -67,6 +67,7 @@ class CoRe_database():
     #
     def rm_sim(self, sim=None, key=None):
         self.sim_list = slu.simlist_remove_sim(self.sim_list, sim, key)
+        self.load_simulations()
     #
     def setup_new_run(self, new_sim, code):
         return  slu.simlist_setup_new(self.sim_list, self.path, new_sim, code)

@@ -55,8 +55,10 @@ class CoRe_index:
             print("Index found, updating...\n")
             self.pull(verbose=verbose, lfs=lfs)
         #
-        self.list = self.read_index()
-        self.dict = self.list_to_dict(self.list)
+
+        self.nr_list, self.hyb_list = self.read_index()
+        self.nr_dict = self.list_to_dict(self.nr_list)
+        self.hyb_dict = self.list_to_dict(self.hyb_list)
         
     #
       
@@ -115,7 +117,7 @@ class CoRe_index:
         if not path: 
             path = self.path
         if not db_list: 
-            db_list = self.dict
+            db_list = self.nr_dict
         for sim in db_list:
             repo = sim.replace(':','_')
             if os.path.isdir(os.path.join(path, repo)):
@@ -138,8 +140,9 @@ class CoRe_index:
         """
         Reads the .json file into a list of dictionaries.
         """
-        db_json = json.load(open(os.path.join(self.path, 'core_database_index/json/DB_NR.json')))
-        return db_json['data']
+        nr_db_json  = json.load(open(os.path.join(self.path, 'core_database_index/json/DB_NR.json')))
+        hyb_db_json = json.load(open(os.path.join(self.path, 'core_database_index/json/DB_Hyb.json')))
+        return nr_db_json['data'], hyb_db_json['data']
     #
     
     def find(self, key, value):
