@@ -33,6 +33,24 @@ class CoRe_database():
         self.sims     = {}
         self.load_simulations()
     #
+    
+    def type(self):
+        return type(self)
+    #
+
+    def show(self, key):
+        if key in vu.labels.keys:
+            try: 
+                float(key)
+                vu.plot_float(self.sims, key, vu.labels[key], dbtype='database')
+            except:
+                vu.plot_literal(self.sims, key)
+            #
+        else:
+            print("Requested value not available for visualization.\nAvailable values are:")
+            print(vu.labels.keys)
+        #
+    #
 
     def load_simulations(self, in_list=None, out_sims=None):
         if in_list==None:
@@ -93,6 +111,11 @@ class CoRe_run():
             self.dfile = None
         #
         self.h5    = h5u.h5(self.path,self.mdata, self.dfile)
+    #
+
+    def type(self):
+        return type(self)
+    #
 
     def create_metadata(self, new_dict=None):
         if new_dict:
@@ -151,6 +174,10 @@ class CoRe_simulation():
             run = CoRe_run(r_path)
             self.runs['R01'] = run
         #
+    #
+
+    def type(self):
+        return type(self)
     #
 
     def create_metadata(self, new_dict=None):

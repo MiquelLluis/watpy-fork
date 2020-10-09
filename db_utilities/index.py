@@ -11,6 +11,8 @@ import sys
 import json
 from subprocess import Popen, PIPE
 
+import db_utilities.viz_utils as vu
+
 def run(cmd, workdir, out, verbose=False):
     proc = Popen(cmd, cwd=workdir, stdout=PIPE,
                  stderr=PIPE, universal_newlines=True)
@@ -44,7 +46,7 @@ def run(cmd, workdir, out, verbose=False):
 class CoRe_index:
     """
     Contains routines to manage and manipulate the database index, 
-    as well as 
+    and visualize the distribution of basic model parameters.
     """
     def __init__(self, path, lfs=False, verbose=True, prot='https'):
         self.path = path
@@ -61,7 +63,29 @@ class CoRe_index:
         #self.hyb_dict = self.list_to_dict(self.hyb_list)
         
     #
+
+    def type(self):
+        return type(self)
+    #
       
+    def show(self, key):
+        if key in vu.index_keys:
+            try: 
+                if key=='id_mass_ratio': 
+                    vu.plot_float(self.nr_dict, key, vu.labels[key])    
+                else:
+                    float(self.nr_dict[key])
+                    vu.plot_float(self.nr_dict, key, vu.labels[key])
+                #
+            except:
+                vu.plot_literal(self.nr_dict, key)
+            #
+        else:
+            print("Requested value not available for visualization.\nAvailable values are:")
+            print(vu.index_keys)
+        #
+    #
+
     def clone(self, dbdir='core_database_index', verbose=True, lfs=False,
                 protocol='https'):
         """

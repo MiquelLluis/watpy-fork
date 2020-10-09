@@ -76,6 +76,11 @@ class mwaves(object):
         self.radii = sorted(list(self.radii))
         self.dtype = sorted(list(self.dtype))
     #
+
+    def type(self):
+        return type(self)
+    #
+
     def get(self, var=None, l=None, m=None, r=None):
         """
         Get the multipole output for the given variable/multipole at the given
@@ -184,6 +189,11 @@ class wave(object):
             #
         #
     #
+
+    def type(self):
+        return type(self)
+    #
+    
     def readEJ(self, fname):
         """
         Read waveform energetics from ASCII file (columns 0,1,2)
