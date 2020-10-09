@@ -152,8 +152,8 @@ class CoRe_index:
         a python dictionary.
         """
         subset = {}
-        for sim in self.dict:
-            entry = self.dict[sim]
+        for sim in self.nr_dict:
+            entry = self.nr_dict[sim]
             if entry[key] == value:
                 subset[sim] = entry
             #

@@ -10,7 +10,7 @@ main_keys = ['database_key', 'simulation_name', 'reference_bibkeys',
             'id_mass_starA', 'id_rest_mass_starA', 'id_spin_starA', 
             'id_LoveNum_kell_starA', 'id_Lambdaell_starA', 'id_mass_starB', 
             'id_rest_mass_starB', 'id_spin_starB', 'id_LoveNum_kell_starB', 
-            'id_Lambdaell_starB']
+            'id_Lambdaell_starB', 'id_eccentricity']
 keys = ['database_key', 'simulation_name', 'available_resolutions', 'reference_bibkeys', 
             'id_code', 'id_type', 'id_mass', 'id_rest_mass', 'id_mass_ratio', 
             'id_ADM_mass', 'id_ADM_angularmomentum', 'id_gw_frequency_Hz', 
@@ -18,7 +18,7 @@ keys = ['database_key', 'simulation_name', 'available_resolutions', 'reference_b
             'id_mass_starA', 'id_rest_mass_starA', 'id_spin_starA', 
             'id_LoveNum_kell_starA', 'id_Lambdaell_starA', 'id_mass_starB', 
             'id_rest_mass_starB', 'id_spin_starB', 'id_LoveNum_kell_starB', 
-            'id_Lambdaell_starB','evolution_code','grid_refinement_levels', 'grid_refinement_levels_moving', 'grid_refinement_levels_npoints',
+            'id_Lambdaell_starB', 'id_eccentricity', 'evolution_code','grid_refinement_levels', 'grid_refinement_levels_moving', 'grid_refinement_levels_npoints',
         'grid_refinement_levels_moving_npoints', 'grid_spacing_min', 'grid_symmetries', 'grid_shells',
         'grid_shells_radial_npoints', 'grid_shells_angular_npoints', 'grid_conservative_amr', 'metric_scheme',
         'metric_boundary_conditions', 'hydro_flux', 'hydro_reconstruction', 'hydro_atmosphere_level',
@@ -296,6 +296,7 @@ id_rest_mass_starB          = {id_rest_mass_starB}
 id_spin_starB               = {id_spin_starB}
 id_LoveNum_kell_starB       = {id_LoveNum_kell_starB}
 id_Lambdaell_starB          = {id_Lambdaell_starB}
+id_eccentricity             = {id_eccentricity}
 # -------------------------------
 # Evolution
 # -------------------------------
