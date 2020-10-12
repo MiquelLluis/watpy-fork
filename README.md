@@ -42,6 +42,7 @@ For users interested in interactive usage of this package we suggest ipyhton not
     |    | metadata_utils.py    Contains classes for simulation metadata manipulation 
     |    | h5_utils.py          Contains the class for the HDF5 archive operations
     |    | simlist_utils.py     Contains internal routines for database operations used in db_utils
+    |    | viz_utils.py         Contains routines used to quickly visualize parameter distribution in the database
     |--- + examples/	    Not a subpackage
     |    | examples.py          Contains coded examples on how to use the tool for waveform visualization
     |    | db_examples.py       Contains coded examples on how to navigate the database
