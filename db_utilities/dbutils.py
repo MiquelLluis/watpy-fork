@@ -20,6 +20,7 @@ import re
 import db_utilities.h5_utils as h5u
 import db_utilities.metadata_utils as mdu 
 import db_utilities.simlist_utils as slu
+import db_utilities.viz_utils as vu
 
 
 class CoRe_database():
