@@ -40,16 +40,16 @@ class CoRe_database():
     #
 
     def show(self, key):
-        if key in vu.labels.keys:
+        if key in vu.database_keys:
             try: 
-                float(key)
+                float(list(self.sims.values())[0].mdata[key])
                 vu.plot_float(self.sims, key, vu.labels[key], dbtype='database')
             except:
-                vu.plot_literal(self.sims, key)
+                vu.plot_literal(self.sims, key, dbtype='database')
             #
         else:
             print("Requested value not available for visualization.\nAvailable values are:")
-            print(vu.labels.keys)
+            print(vu.database_keys)
         #
     #
 

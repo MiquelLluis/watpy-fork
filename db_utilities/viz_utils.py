@@ -22,63 +22,69 @@ labels = {'id_mass' : r'$M_{g}\, [\mathrm{M}_\odot]$',
 		  'id_rest_mass_starB' : r'$M_{g}^{1}\, [\mathrm{M}_\odot]$'}
 
 
-def read_float_mdata(db, key):
-	arr = np.array([])
-	for sim in db.values():
-	    val = float(sim[key])
-	    arr = np.append(arr, val)
-	#
-	return arr
+def read_float_mdata(db, key, dbtype):
+		arr = np.array([])
+		for sim in db.values():
+				if dbtype=='index':
+						val = float(sim[key])
+				else:
+						val = float(sim.mdata[key])
+				#
+				arr = np.append(arr, val)
+		#
+		return arr
 #
 
-def read_mdata(db, key):
-	arr = np.array([])
-	for sim in db.values():
-	    val = sim[key]
-	    arr = np.append(arr, val)
-	#
-	return arr
+def read_mdata(db, key, dbtype):
+		arr = []
+		for sim in db.values():
+				if dbtype=='index':
+						val = sim[key]
+				else:
+						val = sim.mdata[key]
+				#
+				arr.append(val)
+		#
+		return arr
 #
 
 def plot_float(db, key, label, dbtype='index'):
-	fig = plt.figure()
-	ax = fig.add_subplot(111)
+		fig = plt.figure()
+		ax = fig.add_subplot(111)
 
-	if key == 'id_mass_ratio' and dbtype=='index':
-		arr1 = read_float_mdata(db, 'id_mass_starA')
-		arr2 = read_float_mdata(db, 'id_mass_starB')
+		if key == 'id_mass_ratio' and dbtype=='index':
+				arr1 = read_float_mdata(db, 'id_mass_starA')
+				arr2 = read_float_mdata(db, 'id_mass_starB')
 
-		arr = np.zeros_like(arr1)
-		arr = np.divide(arr1, arr2)
+				arr = np.zeros_like(arr1)
+				arr = np.divide(arr1, arr2)
 
-		for i in range(len(arr)):
-			if arr[i]<1.0:
-				arr[i] = 1./arr[i]
-			#
+				for i in range(len(arr)):
+						if arr[i]<1.0:
+								arr[i] = 1./arr[i]
+					#
+				#
+		else:
+				arr = read_float_mdata(db, key, dbtype)
 		#
-	else:
-		arr = read_float_mdata(db, key)
-	#
-	ax.set_xlabel(label)
-	ax.set_ylabel(r'$N_\mathrm{models}$')
+		ax.set_xlabel(label)
+		ax.set_ylabel(r'$N_\mathrm{models}$')
 
-	ax.hist(arr)
+		ax.hist(arr)
 #
 
-def plot_literal(db, key):
-	fig_s = plt.figure()
-	ax    = fig_s.add_subplot(111)
+def plot_literal(db, key, dbtype='index'):
+		fig_s = plt.figure()
+		ax    = fig_s.add_subplot(111)
 
-	par = []
+		par = []
 
-	for sim in db.values():
-	    var = sim[key]
-	    par.append(var)
-	#
-	labels, counts = np.unique(par,return_counts=True)
+		par = read_mdata(db, key, dbtype)	
 
-	ticks = range(len(counts))
-	ax.bar(ticks,counts, align='center')
-	ax.set_ylabel(r'$N_\mathrm{models}$')
-	plt.xticks(ticks, labels, rotation='vertical')
+		labels, counts = np.unique(par,return_counts=True)
+
+		ticks = range(len(counts))
+		ax.bar(ticks,counts, align='center')
+		ax.set_ylabel(r'$N_\mathrm{models}$')
+		plt.xticks(ticks, labels, rotation='vertical')
 #

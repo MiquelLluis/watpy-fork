@@ -11,7 +11,7 @@ class Units:
   To create an object representing the transformation from one system
   into another, the division operator is defined for this class.
   """
-  def __init__(self,ulength, utime, umass):
+  def __init__(self, ulength, utime, umass):
     """Create a unit system based on length unit ulength, time unit utime,
     and mass unit umass.
     """
@@ -44,46 +44,69 @@ class Units:
 
 
 # The following constants are all given in SI units
-C_SI          = 299792458.0           # Vacuum speed of light
-G_SI          = 6.673e-11             # Gravitational constant
-M_SOL_SI      = 1.98892e30            # Solar mass
-EV_SI         = 1.602176565e-19       # Electron volt
-MEV_SI        = 1e6 * EV_SI           
-UAMU_SI       = 931.494061 * MEV_SI / (C_SI**2)   # Unified atomic mass unit
-KB_SI         = 1.3806488e-23         # Boltzmann constant [J/K]
-M_ELECTRON_SI = 9.10938291e-31        # Electron mass
-M_PROTON_SI   = 1.672621777e-27       # Proton mass
-M_NEUTRON_SI  = 1.674927351e-27       # Neutron mass
-LIGHTYEAR_SI  = 9460730472580800.0    # Lightyear
-PARSEC_SI     = 30.856776e15          # Parsec
-N_AVOGADRO    = 6.02214129e23         # 1/mol
-H_SI          = 6.62606957e-34        # Planck constant [J s]
-HBAR_SI       = 1.054571726e-34       # H_SI / (2 pi)
 
-def geom_ulength(ulength):
+#MEV_SI        : 1e6 * EV_SI           
+#UAMU_SI       : 931.494061 * MEV_SI / (C_SI**2)   # Unified atomic mass unit
+
+cactus_cset = {
+'C_SI'          : 299792458.0,           # Vacuum speed of light
+'G_SI'          : 6.673e-11,             # Gravitational constant
+'M_SOL_SI'      : 1.98892e30,            # Solar mass
+'EV_SI'         : 1.602176565e-19,       # Electron volt
+'KB_SI'         : 1.3806488e-23,         # Boltzmann constant [J/K]
+'M_ELECTRON_SI' : 9.10938291e-31,        # Electron mass
+'M_PROTON_SI'   : 1.672621777e-27,       # Proton mass
+'M_NEUTRON_SI'  : 1.674927351e-27,       # Neutron mass
+'LIGHTYEAR_SI'  : 9460730472580800.0,    # Lightyear
+'PARSEC_SI'     : 30.856776e15,          # Parsec
+'N_AVOGADRO'    : 6.02214129e23,         # 1/mol
+'H_SI'          : 6.62606957e-34,        # Planck constant [J s]
+'HBAR_SI'       : 1.054571726e-34,       # H_SI / (2 pi)
+  }
+
+LVC_cset = {
+'C_SI'          : 299792458.0,                                # Vacuum speed of light
+'G_SI'          : 6.6743e-11,                                 # Gravitational constant
+'M_SOL_SI'      : 1.988409902147041637325262574352366540e30,  # Solar mass
+'EV_SI'         : 1.602176634e-19,                            # Electron volt
+'KB_SI'         : 1.380649e-23,                               # Boltzmann constant [J/K]
+'M_ELECTRON_SI' : 9.109383701517728819842163772087735080e-31, # Electron mass
+'M_PROTON_SI'   : 1.672621923684144692109494784075478798e-27, # Proton mass
+'M_NEUTRON_SI'  : 1.674927351e-27,                            # Neutron mass
+'LIGHTYEAR_SI'  : 9460730472580800.0,                         # Lightyear
+'PARSEC_SI'     : 3.085677581491367278913937957796471611e16,  # Parsec
+'N_AVOGADRO'    : 6.02214076e23,                              # 1/mol
+'H_SI'          : 6.62607015e-34,                             # Planck constant [J s]
+'HBAR_SI'       : 1.054571817646156391262428003302280745e-34, # H_SI / (2 pi)
+  }
+
+
+
+
+def geom_ulength(ulength, cset):
   """Create a geometric unit system, expressed in SI, where the length unit
   is given by ulength, expressed in SI units as well.
   """
-  return Units(ulength, ulength/C_SI, ulength * (C_SI **2) / G_SI)
+  return Units(ulength, ulength/cset['C_SI'], ulength * (cset['C_SI'] **2) / cset['G_SI'])
 #
 
-def geom_udensity(udensity):
+def geom_udensity(udensity, cset):
   """Create a geometric unit system, expressed in SI, where the density unit
   is given by udensity, expressed in SI units as well.
   """
-  return geom_ulength( C_SI / math.sqrt(G_SI*udensity))
+  return geom_ulength( cset['C_SI'] / math.sqrt(cset['G_SI']*udensity))
 #
 
-def geom_umass(umass):
+def geom_umass(umass, cset):
   """Create a geometric unit system, expressed in SI, where the mass unit
   is given by umass, expressed in SI units as well.
   """
-  return geom_ulength(umass*G_SI/(C_SI**2))
+  return geom_ulength(umass*cset['G_SI']/(cset['C_SI']**2))
 #
 
 SI_UNITS      = Units(1.0,1.0,1.0)
 CGS_UNITS     = Units(1e-2, 1.0, 1e-3)
-CACTUS_UNITS  = geom_umass(M_SOL_SI)
+CACTUS_UNITS  = geom_umass(cactus_cset['M_SOL_SI'])
 
 #Abbreviations
 
