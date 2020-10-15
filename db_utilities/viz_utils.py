@@ -22,7 +22,10 @@ labels = {'id_mass' : r'$M_{g}\, [\mathrm{M}_\odot]$',
 		  'id_rest_mass_starB' : r'$M_{g}^{1}\, [\mathrm{M}_\odot]$'}
 
 
-def read_float_mdata(db, key, dbtype):
+h5_labels = {'rh_22' : 'h',
+			 'rpsi4_22' : r'\Psi^4'}
+
+def read_float_mdata(db, key, dbtype='index'):
 		arr = np.array([])
 		for sim in db.values():
 				if dbtype=='index':
@@ -35,7 +38,7 @@ def read_float_mdata(db, key, dbtype):
 		return arr
 #
 
-def read_mdata(db, key, dbtype):
+def read_mdata(db, key, dbtype='index'):
 		arr = []
 		for sim in db.values():
 				if dbtype=='index':
@@ -87,4 +90,68 @@ def plot_literal(db, key, dbtype='index'):
 		ax.bar(ticks,counts, align='center')
 		ax.set_ylabel(r'$N_\mathrm{models}$')
 		plt.xticks(ticks, labels, rotation='vertical')
+#
+
+def plot_single(u, var, lbl):
+	"""
+	Plot a single variable (h or Psi4).
+	"""
+	# Set legend font
+	params = {'legend.fontsize': 14,
+	          'legend.handlelength': 2}
+	plt.rcParams.update(params)
+
+	fig = plt.figure()
+	ax  = fig.add_subplot(111)
+
+	# Set axis labels
+	ax.set_xlabel(r'$u\, M_\odot$', fontsize=14)
+	ax.set_ylabel(r'$r\, %s_{22}$' % h5_labels[lbl], fontsize=14)
+
+	# Plot real and imaginary part of the strain
+	ax.plot(u,var.real, color='b', 
+		label=r'$r \mathcal{Re}\, (%s)$' % h5_labels[lbl])
+	ax.plot(u,var.imag, color='g', 
+		label=r'$r \mathcal{Ie}\, (%s)$' % h5_labels[lbl])
+
+	# Plot legend
+	ax.legend(ncol=1, loc='upper right')
+
+	# Fix range
+	ax.set_xlim([u.min(), u.max()]);
+#
+
+def plot_both(hu, hy, pu, py):
+	"""
+	Plot both variables (h and Psi4), if available.
+	"""
+	"""
+	Plot a single variable (h or Psi4).
+	"""
+	# Set legend font
+	params = {'legend.fontsize': 14,
+	          'legend.handlelength': 2}
+	plt.rcParams.update(params)
+
+	fig, axes = plt.subplots(2, 1, sharex=True)
+
+	# Set axis labels
+	axes[1].set_xlabel(r'$u\, M_\odot$', fontsize=14)
+	axes[1].set_ylabel(r'$r\, %s_{22}$' % h5_labels['rpsi4_22'], fontsize=14)
+	axes[0].set_ylabel(r'$r\, %s_{22}$' % h5_labels['rh_22'], fontsize=14)
+
+	# Plot real and imaginary part of strain and Weyl scalar
+	axes[0].plot(hu,hy.real, color='b', 
+		label=r'$\mathcal{Re}$')
+	axes[0].plot(hu,hy.imag, color='g', 
+		label=r'$\mathcal{Im}$')
+
+	axes[1].plot(pu,py.real, color='b')
+	axes[1].plot(pu,py.imag, color='g')
+
+	# Plot legend
+	axes[0].legend(ncol=1, loc='upper right')
+
+	# Fix range
+	axes[0].set_xlim([hu.min(), hu.max()]);
 #

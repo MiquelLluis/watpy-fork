@@ -8,6 +8,8 @@ import os
 import re
 import numpy as np
 
+import db_utilities.viz_utils as vu
+
 def write_dset(filename, groupname, 
                    dsname, data, 
                    attr_names, attr_list, 
@@ -99,6 +101,83 @@ class h5():
             #
         #            
 
+    def read(self, var, det=None):
+        """
+        Read r*h_{22} or r*Psi4_{22} from the .h5 archive files,
+        at the selected extraction radius (deafults to farthest).
+        --------
+        Input:
+        --------
+        var     : 'rh_22' for the strain, 'rpsi4_22' for the Weyl scalar
+        det     : Extraction radius
+        --------
+        Output:
+        --------
+        u       : Tortoise coordinate
+        y       : Complex-valued strain (or weyl scalar)
+
+        """
+        radii = []
+        for f in self.dfile[var]:
+            radii.append(float(f[-8:-4]))
+        #
+        if det in radii:
+            rad = det
+        else:
+            rad   = np.array(radii).max()
+        #
+        try:
+            dset  = self.dfile[var]['Rh_l2_m2_r%05d.txt' % rad] 
+        except:
+            dset  = self.dfile[var]['Rpsi4_l2_m2_r%05d.txt' % rad] 
+        #
+        u     = dset[:,0]
+        y     = dset[:,1] + 1j*dset[:,2]
+
+        return u, y
+    #
+
+    def show(self, var, det=None):
+        """
+        Plot r*h_{22}, r*Psi4_{22} or both from the .h5 archive files,
+        at the selected extraction radius (deafults to farthest).
+        --------
+        Input:
+        --------
+        var     : 'rh_22' for the strain, 'rpsi4_22' for the Weyl scalar,
+                  'both' for both in a two-panel plot
+        """
+        radii = []
+        for f in self.dfile['rh_22']:
+            radii.append(float(f[-8:-4]))
+        #
+        if det in radii:
+            rad = det
+        else:
+            rad   = np.array(radii).max()
+        #
+        if var=='both':
+            h    = self.dfile['rh_22']['Rh_l2_m2_r%05d.txt' % rad] 
+            hu   = h[:,0]
+            hy   = h[:,1] + 1j*h[:,2]
+
+            p    = self.dfile['rpsi4_22']['Rpsi4_l2_m2_r%05d.txt' % rad] 
+            pu   = p[:,0]
+            py   = p[:,1] + 1j*p[:,2]
+
+            vu.plot_both(hu, hy, pu, py)
+        else:
+            try:
+                dset  = self.dfile[var]['Rh_l2_m2_r%05d.txt' % rad] 
+            except:
+                dset  = self.dfile[var]['Rpsi4_l2_m2_r%05d.txt' % rad] 
+            #
+            u     = dset[:,0]
+            y     = dset[:,1] + 1j*dset[:,2]
+
+            vu.plot_single(u, y, var)
+        #   
+    #
 
     def extract_h(self, return_h=False):
         """

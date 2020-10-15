@@ -94,19 +94,19 @@ def geom_udensity(udensity, cset):
   """Create a geometric unit system, expressed in SI, where the density unit
   is given by udensity, expressed in SI units as well.
   """
-  return geom_ulength( cset['C_SI'] / math.sqrt(cset['G_SI']*udensity))
+  return geom_ulength( cset['C_SI'] / math.sqrt(cset['G_SI']*udensity), cactus_cset)
 #
 
 def geom_umass(umass, cset):
   """Create a geometric unit system, expressed in SI, where the mass unit
   is given by umass, expressed in SI units as well.
   """
-  return geom_ulength(umass*cset['G_SI']/(cset['C_SI']**2))
+  return geom_ulength(umass*cset['G_SI']/(cset['C_SI']**2), cactus_cset)
 #
 
 SI_UNITS      = Units(1.0,1.0,1.0)
 CGS_UNITS     = Units(1e-2, 1.0, 1e-3)
-CACTUS_UNITS  = geom_umass(cactus_cset['M_SOL_SI'])
+CACTUS_UNITS  = geom_umass(cactus_cset['M_SOL_SI'], cactus_cset)
 
 #Abbreviations
 
@@ -118,7 +118,7 @@ CU_CGS = CU/CGS
 CGS_CU = CGS/CU
 
 KM_CU  = 1e3 / CU.length
-PARSEC_CU = PARSEC_SI / CU.length
+PARSEC_CU = cactus_cset['PARSEC_SI'] / CU.length
 MS_CU  = 1e-3 / CU.time
 HZ_CU  = 1.0 / CU.freq
 KHZ_CU  = 1e3 / CU.freq
