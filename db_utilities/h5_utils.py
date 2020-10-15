@@ -14,7 +14,9 @@ def write_dset(filename, groupname,
                    dsname, data, 
                    attr_names, attr_list, 
                    mode="r+"):
-    """ Write HDF5 file/group/dataset """
+    """ 
+    Write HDF5 file/group/dataset 
+    """
     timestamp = "T".join( str( datetime.datetime.now() ).split() )
     print(timestamp)
     # file and attributes
@@ -68,7 +70,9 @@ class h5():
 
     def create(self, path=None):
         """
-        Create HDF5 archive containing all gw data in self.path
+        Create HDF5 archive containing all gw data in self.path. 
+        Setting a different path where to create the archive is possible
+        via the argument path=/new/path.
         """
         #Create new file or open existing one
         if path is None: path==self.path

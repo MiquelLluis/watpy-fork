@@ -14,6 +14,23 @@ from subprocess import Popen, PIPE
 import db_utilities.viz_utils as vu
 
 def run(cmd, workdir, out, verbose=False):
+    """
+    Given a command and a working directory, run the command
+    from the bash shell in the given directory.
+    --------
+    Input:
+    --------
+    cmd      : Command to be run in the bash shell as a list of strings
+    workdir  : Directory where to run the command
+    out      : If not None, standard output/error are given as output
+    verbose  : If True, print more information on screen while running.
+
+    --------
+    Output:
+    --------
+    sl_out   : Standard output from the bash command
+    sl_err   : Standard error from the bash command
+    """
     proc = Popen(cmd, cwd=workdir, stdout=PIPE,
                  stderr=PIPE, universal_newlines=True)
     
@@ -47,8 +64,18 @@ class CoRe_index:
     """
     Contains routines to manage and manipulate the database index, 
     and visualize the distribution of basic model parameters.
+    ----------------
+    Initialization:
+    ----------------
+    path     : Where the core_database_index Project is (or should be)
+    lfs      : If True, installs LFS in each Project (recommendend)
+    verbose  : If True, prints more information on screen. Might not 
+               work as intended if lfs=True.
+    prot     : Which protocol to use for syncronization via git. 
+               Defaults to https, which is needed for git-LFS.
+               
     """
-    def __init__(self, path, lfs=False, verbose=True, prot='https'):
+    def __init__(self, path, lfs=True, verbose=True, prot='https'):
         self.path = path
         if not os.path.isdir(os.path.join(self.path,'core_database_index')):
             print("Index not found, cloning...\n")

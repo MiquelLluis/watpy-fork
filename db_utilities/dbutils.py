@@ -5,7 +5,7 @@
 """
 Notes:
 - Simulations' metadata are stored in dictionaries 
-- The database can be accessed either as a dictiornary of dictionaries
+- The database can be accessed either as a dictionary of dictionaries
   or a list of dictionaries
 """
 
@@ -26,7 +26,9 @@ import db_utilities.viz_utils as vu
 class CoRe_database():
     """
     Class containing a list of objects each representing a simulation
-    from the CoRe database as a CoRe_simulation object.
+    from the CoRe database as a CoRe_simulation object. Only requires 
+    the path to where the CoRe Database is stored (i.e.: where the 
+    core_database_index Project folder is).
     """
     def __init__(self, db_path):
         self.path     = db_path
@@ -36,10 +38,23 @@ class CoRe_database():
     #
     
     def type(self):
+        """
+        Returns the class type
+        """
         return type(self)
     #
 
-    def show(self, key):
+    def show(self, key, out=None):
+        """
+        For a given key, checks whether it is available for visualization
+        and returns the histogram plot.
+        --------
+        Inputs:
+        --------
+        key      : Database key to visualize [string]  
+        out      : If not None, saves the image as 'out' 
+                   (Specify format in the string) [string] 
+        """
         if key in vu.database_keys:
             try: 
                 float(list(self.sims.values())[0].mdata[key])
@@ -54,6 +69,9 @@ class CoRe_database():
     #
 
     def load_simulations(self, in_list=None, out_sims=None):
+        """
+        Loads metadata information for all database entries in a list.
+        """
         if in_list==None:
             in_list = self.sim_list
         #
@@ -72,9 +90,14 @@ class CoRe_database():
     def get_simulation_list(self):
         return slu.get_simlist(r'(\w+)_\d\d\d\d', self.path)
     #
-    def find(self, keyword, value):
+    def find(self, key, value):
+        """
+        For a given pair (key, value), returns a subset of the database 
+        containing only the entries whose metadata attribute 'key' corresponds
+        to the required value.
+        """
         sub_db = {}
-        sub_list = slu.simlist_find(self.sim_list, keyword, value)
+        sub_list = slu.simlist_find(self.sim_list, key, value)
         sub_db = self.load_simulations(in_list=sub_list, out_sims=sub_db)
         return sub_db
     #
@@ -115,10 +138,18 @@ class CoRe_run():
     #
 
     def type(self):
+        """
+        Returns the class type
+        """
         return type(self)
     #
 
     def create_metadata(self, new_dict=None):
+        """
+        Creates a new metadata file for the specific run. 
+        If new_dict is not set, the existing 
+        metadata dictionary is used (might be empty).
+        """
         if new_dict:
             mdu.metadata_write(self.path, py_dict=new_dict, 
                                 filename="metadata.txt")
@@ -129,6 +160,11 @@ class CoRe_run():
         return self.mdata
     #
     def update_metadata(self, new_dict=None):
+        """
+        Updates the metadata file for the specific run. 
+        If new_dict is not set, the existing 
+        metadata dictionary is used (might be empty).
+        """
         if new_dict:
             self.mdata = new_dict
             return mdu.metadata_write(self.path, 
@@ -144,6 +180,11 @@ class CoRe_run():
     #
 
     def clean_txt(self):
+        """
+        Removes all .txt files that are created when extracting
+        waveform data from the HDF5 archive (note these .txt files 
+        should NEVER be pushed to the database).
+        """
         txt_files = [file for file in self.path if file.endswith(".txt")]
         txt_files.remove('metadata.txt')
         for file in txt_files:
@@ -178,10 +219,18 @@ class CoRe_simulation():
     #
 
     def type(self):
+        """
+        Returns the class type
+        """
         return type(self)
     #
 
     def create_metadata(self, new_dict=None):
+        """
+        Creates a new metadata file for the database 
+        entry. If new_dict is not set, the existing 
+        metadata dictionary is used (might be empty).
+        """
         if new_dict:
             mdu.metadata_write(self.path, py_dict=new_dict, 
                                 filename="metadata_main.txt")
@@ -192,6 +241,11 @@ class CoRe_simulation():
         return self.mdata
     #
     def update_metadata(self, new_dict=None):
+        """
+        Updates the metadata file for the database 
+        entry. If new_dict is not set, the existing 
+        metadata dictionary is used (might be empty).
+        """
         if new_dict:
             self.mdata = new_dict
             return mdu.metadata_write(self.path, 
