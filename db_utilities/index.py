@@ -87,7 +87,7 @@ class CoRe_index:
 
         self.nr_list, self.hyb_list = self.read_index()
         self.nr_dict = self.list_to_dict(self.nr_list)
-        #self.hyb_dict = self.list_to_dict(self.hyb_list)
+        self.hyb_dict = self.list_to_dict(self.hyb_list)
         
     #
 

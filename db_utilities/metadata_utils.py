@@ -10,7 +10,7 @@ main_keys = ['database_key', 'simulation_name', 'reference_bibkeys',
             'id_mass_starA', 'id_rest_mass_starA', 'id_spin_starA', 
             'id_LoveNum_kell_starA', 'id_Lambdaell_starA', 'id_mass_starB', 
             'id_rest_mass_starB', 'id_spin_starB', 'id_LoveNum_kell_starB', 
-            'id_Lambdaell_starB', 'id_eccentricity']
+            'id_Lambdaell_starB', 'id_eccentricity','grid_spacing_min']
 keys = ['database_key', 'simulation_name', 'available_resolutions', 'reference_bibkeys', 
             'id_code', 'id_type', 'id_mass', 'id_rest_mass', 'id_mass_ratio', 
             'id_ADM_mass', 'id_ADM_angularmomentum', 'id_gw_frequency_Hz', 

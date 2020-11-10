@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-index_keys = ["id_eos", "id_gw_frequency_Momega22", "id_mass_ratio"]
+index_keys = ["id_eos", "id_gw_frequency_Momega22", "id_mass_ratio", "grid_spacing_min"]
 
 database_keys = ['id_code', 'id_type', 'id_mass', 'id_rest_mass', 'id_mass_ratio', 'id_ADM_mass', 'id_ADM_angularmomentum', 
 				 'id_gw_frequency_Hz', 'id_gw_frequency_Momega22', 'id_eos', 'id_kappa2T', 'id_Lambda', 'id_mass_starA', 

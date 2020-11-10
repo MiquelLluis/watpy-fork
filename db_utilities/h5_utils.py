@@ -195,12 +195,13 @@ class h5():
         for f in self.dfile['rh_22']:
             rad  = float(f[-8:-4])
             headstr  = "# r=%e\n # M=%e\n " % (rad, mass)
-            headstr += "# u/M:0 Reh/M:1 Imh/M:2 Momega:3 A/M:4 phi:5 t:6"
+            headstr += "# u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8"
                 
             dset = self.dfile['rh_22'][f]
                 
             data = np.c_[dset[:,0],dset[:,1],dset[:,2],
-                        dset[:,3],dset[:,4],dset[:,5],dset[:,6]]
+                        dset[:,3],dset[:,4],dset[:,5],
+                        dset[:,6],dset[:,7],dset[:,8]]
 
             np.savetxt(os.path.join(self.path,f),
                        data, header=headstr)
@@ -225,9 +226,14 @@ class h5():
             headstr += "# u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6"
                 
             dset = self.dfile['rpsi4_22'][f]
-                
-            data = np.c_[dset[:,0],dset[:,1],dset[:,2],
+            try:
+                data = np.c_[dset[:,0],dset[:,1],dset[:,2],
                         dset[:,3],dset[:,4],dset[:,5],dset[:,6]]
+            except:
+                headstr  = "# r=%e\n # M=%e\n " % (rad, mass)
+                headstr += "# u/M:0 RePsi4/M:1 ImPsi4/M:2 t:4"
+                data = np.c_[dset[:,0],dset[:,1],dset[:,2],
+                        dset[:,3]]            
 
             np.savetxt(os.path.join(self.path,f), 
                        data, header=headstr)
