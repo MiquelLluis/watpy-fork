@@ -146,14 +146,28 @@ def min_phasediff_L2(t1,p1,t2,p2, tab, guess=[0.,0.], tol=1e-9):
     return p2i, xopt[1], xopt[0], Dphi
 #
 
-def radius_extrap():
+def radius_extrap(t, psi4, r0, l=2, m=2, m0=1):
     """
     Perform extrapolation in radius
-    """
-    
-    ## TODO
 
-    return None
+    Extrapolates Psi4 to infinite radius following
+
+        Lousto et al. PRD 82 104057 (2010)
+        Kiuchi et al. PRD 96 084060 (2017)
+
+    Input
+        * t, psi4   : time and complex (l,m)-mode of R psi4 
+        * r0        : extraction radius
+        * l, m      : multipole index
+        * m0        : ADM mass
+    Output
+        * Psi4_inf  : extrapolated R psi4 to R -> oo
+    """
+    rA = r0*(1. + m0/(2.*r0))**2
+    C  = 1. - 2.*m0/rA
+    dt = np.concatenate(([0], np.diff(t)))
+    return C*(psi4 - (l-1)*(l+2)/(2*rA)*np.cumsum(psi4*dt))
+#
 
 def richardson_extrap(p, h, t, y, kref=0, wrtref=True):
 
