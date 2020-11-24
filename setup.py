@@ -9,6 +9,6 @@ setup(
     author='AAVV',
     author_email='core@uni-jena.de',
     url = 'https://bitbucket.org/bernuzzi/watpy',
-    packages = ['base', 'db_utilities'],
+    packages = ['watpy/base', 'watpy/db_utilities'],
     requires = ['h5py', 'numpy', 'matplotlib'],
 )

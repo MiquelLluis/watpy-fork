@@ -48,7 +48,7 @@ def wfile_parse_name(fname):
     for tp, sm in t.items():
         name = re.match(sm, os.path.basename(fname))
         if name is not None:
-            if tp is not 'energ':
+            if tp != 'energ':
                 v    = name.group(1)
                 l    = int(name.group(2))
                 m    = int(name.group(3))
