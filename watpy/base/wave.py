@@ -1,5 +1,5 @@
-from base.utils import *
-from base.units import *
+from .utils import *
+from .units import *
 
 class mwaves(object):
     """ 

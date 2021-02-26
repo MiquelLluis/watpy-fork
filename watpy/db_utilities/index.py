@@ -11,7 +11,7 @@ import sys
 import json
 from subprocess import Popen, PIPE
 
-import db_utilities.viz_utils as vu
+from . import viz_utils as vu
 
 def run(cmd, workdir, out, verbose=False):
     """

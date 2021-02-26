@@ -8,9 +8,9 @@ from numpy import inf
 import numpy as np
 import sys
 
-import base.phys_utils as phu
-import base.num_utils as num
-import base.gw_utils as gwu
+from . import phys_utils as phu
+from . import num_utils as num
+from . import gw_utils as gwu
 
 # ------------------------------------------------------------------
 # General 

@@ -2,7 +2,7 @@ import os
 import re
 import sys
 import numpy as np
-import db_utilities.metadata_utils as mdu
+from . import metadata_utils as mdu
 
 """ 
 ROUTINES TO MANAGE SIMULATIONS and SIMULATION LISTS

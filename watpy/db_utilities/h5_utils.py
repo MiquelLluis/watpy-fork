@@ -8,7 +8,7 @@ import os
 import re
 import numpy as np
 
-import db_utilities.viz_utils as vu
+from . import viz_utils as vu
 
 def write_dset(filename, groupname, 
                    dsname, data, 

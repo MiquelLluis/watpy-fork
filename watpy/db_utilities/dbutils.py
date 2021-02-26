@@ -17,10 +17,10 @@ import datetime
 import os, sys
 import re
 
-import db_utilities.h5_utils as h5u
-import db_utilities.metadata_utils as mdu 
-import db_utilities.simlist_utils as slu
-import db_utilities.viz_utils as vu
+from . import h5_utils as h5u
+from . import metadata_utils as mdu
+from . import simlist_utils as slu
+from . import viz_utils as vu
 
 
 class CoRe_database():
