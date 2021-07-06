@@ -3,7 +3,7 @@
 import numpy as np
 import scipy as sp
 import math
-import base.num_utils as num
+from . import num_utils as num
 
 # ------------------------------------------------------------------
 # Waveform analysis utilities

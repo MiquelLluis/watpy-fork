@@ -1,9 +1,17 @@
 # Python Waveform Analysis Tools
 
 The [CoRe](http://www.computational-relativity.org/) python package for the analysis of gravitational waves based on
-[scidata](https://bitbucket.org/dradice/scidata/src/default/),
-[Matlab's WAT](https://bitbucket.org/bernuzzi/wat/src/master/) and 
-[pyGWAnalysis](http://svn.einsteintoolkit.org/pyGWAnalysis/trunk/) 
+[`scidata`](https://bitbucket.org/dradice/scidata/src/default/),
+[Matlab's `WAT`](https://bitbucket.org/bernuzzi/wat/src/master/) and 
+[`pyGWAnalysis`](http://svn.einsteintoolkit.org/pyGWAnalysis/trunk/) 
+
+## Installation
+
+The installation relies on standard Python library `setuptools`.
+Once the repository is cloned, the installation can be performed in two ways,
+depending on the choice of the user:
+* Run the command `python setup.py install` inside the project directory. This option might require the `sudo` specification.
+* Install the module via `pip` running the command `python -m pip install` inside the project directory. It is possible to include the `--user` option and the `-e` option for editing.
 
 ## Requirements
 

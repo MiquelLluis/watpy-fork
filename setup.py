@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name='watpy3',
@@ -9,6 +8,6 @@ setup(
     author='AAVV',
     author_email='core@uni-jena.de',
     url = 'https://bitbucket.org/bernuzzi/watpy',
-    packages = ['watpy/base', 'watpy/db_utilities'],
+    packages = find_packages(),
     requires = ['h5py', 'numpy', 'matplotlib'],
 )
