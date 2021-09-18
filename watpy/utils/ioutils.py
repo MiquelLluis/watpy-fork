@@ -160,5 +160,88 @@ def loadtxt_comments(fname, com_str=['#','"']):
     return data, comments
 
 
+#---------------------------------------------------------------------------
+# CSV, JSON, TXT files
+#---------------------------------------------------------------------------
+
+
+def read_csv_into_dict(filename):
+    """ 
+    Read a CSV file into a python dictionary
+    """
+    data = [] 
+    with open(filename) as f:
+        reader = csv.DictReader(f, delimiter=',')
+        for line in reader:
+            data.append(line)
+    return data
+
+
+def write_dict_into_csv(filename, fieldnames, data):
+    """ 
+    Writes a python dictionary into a CSV file 
+    """
+    with open(filename, "wb") as f:
+        writer = csv.DictWriter(f, delimiter=',', fieldnames=fieldnames)
+        writer.writeheader()
+        for row in data:
+            writer.writerow(row)
+
+
+def write_dict_into_json(filename, d):
+    """ 
+    Write python dictionary to JSON file 
+    """
+    with open(filename, 'w') as f:
+        json.dump(d, f)
+    return 
+
+
+def read_json_into_dict(filename):
+    """ 
+    Read JSON file into a python dictionary 
+    """
+    with open(filename) as f:
+        d = json.load(f, strict=False) 
+    return d
+
+
+def read_txt_header(filename, comm_char='#'):
+    """ Read TXT file header lines into list """
+    h = []
+    with open(filename) as data:
+        for line in data:
+            if line[0]==comm_char:
+                h.append(line[1::].strip())
+    return h
+
+
+def read_txt_into_dict(filename, sep_char='=', comm_char='#'):
+    """ 
+    Read a TXT file with lines 'parameter = value', return a dict 
+    """
+    d = dict()
+    with open(filename) as data:
+        for line in data:
+            if line[0]==comm_char:
+                continue
+            if sep_char in line:
+                key,value = line.split(sep_char, 1)
+                d[key.strip()] = value.strip()
+            else:
+                pass # skip empty/bad lines
+    return d
+
+
+def write_dict_into_txt(d, filename, sep_char='='):
+    """ 
+    Write dict into a TXT file with lines 'parameter = value' 
+    """
+    with open(filename, 'w') as f:
+        for key, value in d.items():
+            f.write('%s = %s\n' % (key, value))
+    return None
+
+
 
 

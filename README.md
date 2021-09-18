@@ -10,7 +10,7 @@ The [CoRe](http://www.computational-relativity.org/) python package for the anal
 The installation relies on standard Python library `setuptools`.
 Once the repository is cloned, the installation can be performed in two ways,
 depending on the choice of the user:
-* Run the command `python setup.py install` inside the project directory. This option might require the `sudo` specification.
+* Run the command `python setup.py install` or `python setup.py install --user` inside the project directory. 
 * Install the module via `pip` running the command `python -m pip install` inside the project directory. It is possible to include the `--user` option and the `-e` option for editing.
 
 ## Requirements
@@ -33,29 +33,6 @@ For users interested in interactive usage of this package we suggest ipyhton not
 
 * [iPython](https://ipython.org/) (Strictly better version of the basic python shell)
 * [Jupyter](https://jupyter.org/) (Notebooks, slides, HTML conversion of notebooks and more)
-
-## Content
-
-    + watpy/		Top-level package
-    |--- + base/ 			Subpackage with basic routines 
-    |    | wave.py 				Contains classes for multipoles and single mode waves
-    | 	 | gw_utils.py  		Contains utilities for wave quantity manipulation
-    | 	 | num_utils.py 		Contains numerical utilities
-    | 	 | phys_utils.py 		Contains physics routines (e.g., for tidal parameters calculation)
-    |	 | utils.py    			Contains general inut/output utilities
-    |	 | units.py 			Contains unit conversion utilities
-    |--- + db_utilities/    Subpackage with database routines
-    |    | index.py             Contains the class to handle the database index
-    |    | db_utils.py          Contains classes to handle database entries and single runs
-    |    | metadata_utils.py    Contains classes for simulation metadata manipulation 
-    |    | h5_utils.py          Contains the class for the HDF5 archive operations
-    |    | simlist_utils.py     Contains internal routines for database operations used in db_utils
-    |    | viz_utils.py         Contains routines used to quickly visualize parameter distribution in the database
-    |--- + examples/	    Not a subpackage
-    |    | examples.py          Contains coded examples on how to use the tool for waveform visualization
-    |    | db_examples.py       Contains coded examples on how to navigate the database
-    |    | DB_tutorial.ipynb    Jupyter notebook with a step-by-step tutorial on how to use the tool and the database
-    |    | DB_tutorial.html     HTML version of the tutorial (for non-jupyter users; NB: NOT interactive)
     
 ## Features
 
