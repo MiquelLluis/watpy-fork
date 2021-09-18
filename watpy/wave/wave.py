@@ -1,5 +1,6 @@
-from .files import *
-from .numutils import diff1, diffo
+from ..utils.ioutils import *
+from ..utils.num import diff1, diffo
+from ..utils.viz import wplot
 from .gwutils import fixed_freq_int_2, waveform2energetics, ret_time
 
 
@@ -56,30 +57,31 @@ def wfile_parse_name(fname):
     return vlmr
 
 
+# CoRe specials
+
+
 def wfile_get_detrad(fname):
     """
-    Get detector radius from wf file header
+    Get detector radius from CoRe file header
     ------
     Input
     -----
     fname  : Name of the file to parse for information
     """
-    s = extract_comments(fname, '"')
-    s = re.sub(r' ', '',s[0]).upper() 
-    return float(re.match('#R=%s', s))
+    s = extract_comments(fname, '#')
+    return float(re.findall("\d+\.\d+",s[0])[0])
               
 
 def wfile_get_mass(fname):
     """
-    Get binary mass from wf file header
+    Get binary mass from CoRe file header
     ------
     Input
     -----
     fname  : Name of the file to parse for information
     """
-    s = extract_comments(fname, '"')
-    s = re.sub(r' ', '',s[1]).upper() 
-    return float(re.match('#M=%s', s))
+    s = extract_comments(fname, '#')
+    return float(re.findall("\d+\.\d+",s[1])[0])
 
 
 # BAM specials
@@ -402,37 +404,39 @@ class wave(object):
         u = self.time_ret()/self.prop['mass']
         Rh = self.h /self.prop['mass']
         omega = self.prop['mass'] * self.phase_diff1()
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(2,1, sharex=True)
-        ax[0].plot(u, Rh.real, label='Real part')
-        ax[0].plot(u, np.abs(Rh), label='Amplitude')
-        ax[1].plot(u, omega)
-        ax[1].set_xlabel(r'$u/M$')
-        ax[0].set_ylabel(r'$R/M\, h_{{{}{}}}$'.format(self.prop['lmode'],self.prop['mmode']))
-        ax[1].set_ylabel(r'$M\,\omega$')
-        ax[0].set_xlim([0, u.max()])
-        if to_file: plt.savefig(to_file)
-        return fig
+        return wplot(u, Rh, omega=omega, to_file = to_file)
+        # import matplotlib.pyplot as plt
+        # fig, ax = plt.subplots(2,1, sharex=True)
+        # ax[0].plot(u, Rh.real, label='Real part')
+        # ax[0].plot(u, np.abs(Rh), label='Amplitude')
+        # ax[1].plot(u, omega)
+        # ax[1].set_xlabel(r'$u/M$')
+        # ax[0].set_ylabel(r'$R/M\, h_{{{}{}}}$'.format(self.prop['lmode'],self.prop['mmode']))
+        # ax[1].set_ylabel(r'$M\,\omega$')
+        # ax[0].set_xlim([0, u.max()])
+        # if to_file: plt.savefig(to_file)
+        # return fig
 
     def show_psi4(self, to_file=None):
         """
         Show Psi4 and instantaneous frequency
         """
         u = self.time_ret()/self.prop['mass']
-        Rh = self.p4 
+        psi4 = self.p4 
         omega = self.prop['mass'] * self.phase_diff1(var='Psi4')
-        import matplotlib.pyplot as plt
-        fig, ax = plt.subplots(2,1, sharex=True)
-        ax[0].plot(u, Rh.real, label='Real part')
-        ax[0].plot(u, np.abs(Rh), label='Amplitude')
-        ax[1].plot(u, omega)
-        ax[1].set_xlabel(r'$u/M$')
-        ax[0].set_ylabel(r'$R\,\psi_{{{}{}}}$'.format(self.prop['lmode'],self.prop['mmode']))
-        ax[1].set_ylabel(r'$M\,\omega$')
-        ax[0].set_xlim([0, u.max()])
-        ax[0].legend()
-        if to_file: plt.savefig(to_file)
-        return fig
+        return wplot(u, psi4, omega=omega, to_file = to_file)
+        # import matplotlib.pyplot as plt
+        # fig, ax = plt.subplots(2,1, sharex=True)
+        # ax[0].plot(u, Rh.real, label='Real part')
+        # ax[0].plot(u, np.abs(Rh), label='Amplitude')
+        # ax[1].plot(u, omega)
+        # ax[1].set_xlabel(r'$u/M$')
+        # ax[0].set_ylabel(r'$R\,\psi_{{{}{}}}$'.format(self.prop['lmode'],self.prop['mmode']))
+        # ax[1].set_ylabel(r'$M\,\omega$')
+        # ax[0].set_xlim([0, u.max()])
+        # ax[0].legend()
+        # if to_file: plt.savefig(to_file)
+        # return fig
 
     def prop_read_from_file(self, filename):
         """

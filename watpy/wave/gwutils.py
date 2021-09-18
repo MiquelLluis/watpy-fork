@@ -1,7 +1,7 @@
 import numpy as np
 import scipy as sp
 import math
-from . import numutils as num 
+from ..utils import num as num 
 import warnings as wrn
 try:
     from scipy import factorial2
