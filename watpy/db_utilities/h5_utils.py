@@ -5,10 +5,12 @@ https://support.hdfgroup.org/HDF5/examples/intro.html
 """
 import h5py
 import os
+import os.path
 import re
 import numpy as np
 
 from . import viz_utils as vu
+from watpy.base.utils import *
 
 def write_dset(filename, groupname, 
                    dsname, data, 
@@ -67,8 +69,90 @@ class h5():
             print("No .h5 file found!")
         #
     #
-
     def create(self, path=None):
+        """
+        Create HDF5 archive containing all gw data in self.path. 
+        Setting a different path where to create the archive is possible
+        via the argument path=/new/path.
+
+        Extended from the previous version (now 'create_22') for multiples modes
+        Backward compatible
+        """
+        #Create new file or open existing one
+        if path is None: path == self.path
+        fn = h5py.File(self.path+'/data.h5', 'a')
+        #Loop over all available files, and add each of them as a dataset
+        for f in os.listdir(path):
+            if '.txt' != os.path.splitext(f)[-1]: continue
+            vlmr = wfile_parse_name(f)
+            if vlmr == None: continue
+            var,l,m,r,c = vlmr 
+            if var == 'EJ':
+                if u'energies' not in fn.keys():
+                    fn.create_group('energies')
+                if f not in fn['energies'].keys():
+                    data = np.loadtxt(os.path.join(path,f))
+                    fn['energies'].create_dataset(name=f, data=data)
+                #
+            elif var == 'psi4':
+                gname = 'rpsi4_{}{}'.format(l,m)
+                if gname not in fn.keys():
+                    fn.create_group(gname)
+                if f not in fn[gname].keys():
+                    data = np.loadtxt(os.path.join(path,f))
+                    fn[gname].create_dataset(name=f, data=data)
+                #
+            elif var == 'h':
+                gname = 'rh_{}{}'.format(l,m)
+                if gname not in fn.keys():
+                    fn.create_group(gname)
+                if f not in fn[gname].keys():
+                    data = np.loadtxt(os.path.join(path,f))
+                    fn[gname].create_dataset(name=f, data=data)
+                #
+            #
+        #
+        print('wrote CoRe {}'.format(self.path+'/data.h5'))
+    #
+    def read(self, var, det=None):
+        """
+        Read r*h_{lm} or r*Psi4_{lm} from the .h5 archive files,
+        at the selected extraction radius (deafults to farthest).
+
+        Extended from the previous version (now 'read_22') for multiples modes
+        Backward compatible
+        --------
+        Input:
+        --------
+        var     : e.g. 'rh_22' for the strain, 'rpsi4_22' for the Weyl scalar
+        det     : Extraction radius
+        --------
+        Output:
+        --------
+        u       : Tortoise coordinate
+        y       : Complex-valued strain (or weyl scalar)
+        """
+        lm = var.split('_')[1]
+        l,m = lm[0], lm[1:] #FIXME: this might work also m<0 modes
+        radii = []
+        for f in self.dfile[var]:
+            radii.append(float(f[-8:-4]))
+        #
+        if det in radii:
+            rad = det
+        else:
+            rad   = np.array(radii).max()
+        #
+        try:
+            dset  = self.dfile[var]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))] 
+        except:
+            dset  = self.dfile[var]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))] 
+        #
+        u     = dset[:,0]
+        y     = dset[:,1] + 1j*dset[:,2]
+        return u, y
+    #
+    def create_22(self, path=None):
         """
         Create HDF5 archive containing all gw data in self.path. 
         Setting a different path where to create the archive is possible
@@ -103,9 +187,9 @@ class h5():
                     fn['rh_22'].create_dataset(name=f, data=data)
                 #
             #
-        #            
-
-    def read(self, var, det=None):
+        #
+    #
+    def read_22(self, var, det=None):
         """
         Read r*h_{22} or r*Psi4_{22} from the .h5 archive files,
         at the selected extraction radius (deafults to farthest).
@@ -137,10 +221,85 @@ class h5():
         #
         u     = dset[:,0]
         y     = dset[:,1] + 1j*dset[:,2]
-
         return u, y
     #
-
+    def extract_h(self, lm=[(2,2)]):
+        """
+        Extract r*h_{22} from the .h5 archive into separate .txt
+        files, one per saved radius. 
+        """
+        mass = float(self.mdata['id_mass'])
+        for l,m in lm:
+            gname = 'rh_{}{}'.format(l,m)
+            if gname not in self.dfile.keys(): continue
+            for f in self.dfile[gname]:
+                rad  = float(f[-8:-4])
+                headstr  = "r=%e\nM=%e\n " % (rad, mass)
+                headstr += "u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8"
+                dset = self.dfile[gname][f]
+                data = np.c_[dset[:,0],dset[:,1],dset[:,2],
+                             dset[:,3],dset[:,4],dset[:,5],
+                             dset[:,6],dset[:,7],dset[:,8]]
+                np.savetxt(os.path.join(self.path,f),
+                           data, header=headstr)
+        #
+    #
+    def extract_p4(self, lm=[(2,2)]):
+        """
+        Extract r*Psi4_{22} from the .h5 archive into separate .txt
+        files, one per saved radius. 
+        """
+        mass = float(self.mdata['id_mass'])
+        for l,m in lm:
+            gname = 'rh_{}{}'.format(l,m)
+            if gname not in self.dfile.keys(): continue
+            for f in self.dfile[gname]:
+                rad  = float(f[-8:-4])
+                headstr  = "r=%e\nM=%e\n " % (rad, mass)
+                dset = self.dfile[gname][f]
+                try:
+                    headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6"
+                    data = np.c_[dset[:,0],dset[:,1],dset[:,2],
+                                 dset[:,3],dset[:,4],dset[:,5],dset[:,6]]
+                except:
+                    headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 t:4"
+                    data = np.c_[dset[:,0],dset[:,1],dset[:,2],
+                                 dset[:,3]]            
+                np.savetxt(os.path.join(self.path,f), 
+                           data, header=headstr)
+            #
+        #
+    #
+    def extract_ej(self):
+        """
+        Extract energetics from the .h5 archive into separate .txt
+        files, one per saved radius. 
+        """
+        mass = float(self.mdata['id_mass'])
+        for f in self.dfile['energy']:
+            rad  = float(f[-8:-4])
+            headstr = "r=%e\nM=%e\n " % (rad, mass)
+            dset = self.dfile['energy'][f]
+            try:
+                headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4 t:5"
+                data = np.c_[dset[:,0],dset[:,1],dset[:,2],
+                             dset[:,3],dset[:,4],dset[:,5]]
+            except:
+                headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4"
+                data = np.c_[dset[:,0],dset[:,1],dset[:,2],
+                             dset[:,3],dset[:,4]]
+            np.savetxt(os.path.join(self.path,f), 
+                       data, header=headstr)
+        #
+    #
+    def extract_all(self):
+        """
+        Extract all data in the .h5 archive.
+        """
+        self.extract_h()
+        self.extract_p4()
+        self.extract_ej()
+    #
     def show(self, var, det=None):
         """
         Plot r*h_{22}, r*Psi4_{22} or both from the .h5 archive files,
@@ -178,104 +337,7 @@ class h5():
             #
             u     = dset[:,0]
             y     = dset[:,1] + 1j*dset[:,2]
-
             vu.plot_single(u, y, var)
         #   
-    #
-
-    def extract_h(self, return_h=False):
-        """
-        Extract r*h_{22} from the .h5 archive into separate .txt
-        files, one per saved radius. If return_h==True, it also
-        returns retarded time and complex h at the farthest 
-        extraction radius.
-        """
-        mass = float(self.mdata['id_mass'])
-
-        for f in self.dfile['rh_22']:
-            rad  = float(f[-8:-4])
-            headstr  = "# r=%e\n # M=%e\n " % (rad, mass)
-            headstr += "# u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8"
-                
-            dset = self.dfile['rh_22'][f]
-                
-            data = np.c_[dset[:,0],dset[:,1],dset[:,2],
-                        dset[:,3],dset[:,4],dset[:,5],
-                        dset[:,6],dset[:,7],dset[:,8]]
-
-            np.savetxt(os.path.join(self.path,f),
-                       data, header=headstr)
-        #
-        if return_h:
-            return dset[:,0], dset[:,1] + 1j*dset[:,2]
-        #
-    #
-
-    def extract_p4(self, return_p4=False):
-        """
-        Extract r*Psi4_{22} from the .h5 archive into separate .txt
-        files, one per saved radius. If return_p4==True, it also
-        returns retarded time and complex Psi4 at the farthest 
-        extraction radius.
-        """
-        mass = float(self.mdata['id_mass'])
-
-        for f in self.dfile['rpsi4_22']:
-            rad  = float(f[-8:-4])
-            headstr  = "# r=%e\n # M=%e\n " % (rad, mass)
-            headstr += "# u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6"
-                
-            dset = self.dfile['rpsi4_22'][f]
-            try:
-                data = np.c_[dset[:,0],dset[:,1],dset[:,2],
-                        dset[:,3],dset[:,4],dset[:,5],dset[:,6]]
-            except:
-                headstr  = "# r=%e\n # M=%e\n " % (rad, mass)
-                headstr += "# u/M:0 RePsi4/M:1 ImPsi4/M:2 t:4"
-                data = np.c_[dset[:,0],dset[:,1],dset[:,2],
-                        dset[:,3]]            
-
-            np.savetxt(os.path.join(self.path,f), 
-                       data, header=headstr)
-        #
-        if return_p4:
-            return dset[:,0], dset[:,1] + 1j*dset[:,2]
-        #
-    #
-
-
-    def extract_ej(self, return_ej=False):
-        """
-        Extract energetics from the .h5 archive into separate .txt
-        files, one per saved radius. If return_ej==True, it also
-        returns retarded time, energy and angular momentum at the 
-        farthest extraction radius.
-        """
-        mass = float(self.mdata['id_mass'])
-        for f in self.dfile['energy']:
-            rad  = float(f[-8:-4])
-            headstr  = "# r=%e\n # M=%e\n " % (rad, mass)
-            headstr += "# u/M:0 E:1 E_dot:2 J:3 J_dot:4 t:5"
-                
-            dset = self.dfile['energy'][f]
-                
-            data = np.c_[dset[:,0],dset[:,1],dset[:,2],
-                        dset[:,3],dset[:,4],dset[:,5]]
-
-            np.savetxt(os.path.join(self.path,f), 
-                       data, header=headstr)
-        #
-        if return_ej:
-            return dset[:,0], dset[:,1], dset[:,3]
-        #
-    #
-
-    def extract_all(self):
-        """
-        Extract all data in the .h5 archive.
-        """
-        self.extract_h()
-        self.extract_p4()
-        self.extract_ej()
     #
 #

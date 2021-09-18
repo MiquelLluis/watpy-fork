@@ -2,10 +2,6 @@
 
 """ Various utilities to manage the Core Database Index """
 
-
-__author__      = "S.Bernuzzi"
-__copyright__   = "Copyright 2017"
-
 import os
 import sys
 import json
@@ -33,7 +29,6 @@ def run(cmd, workdir, out, verbose=False):
     """
     proc = Popen(cmd, cwd=workdir, stdout=PIPE,
                  stderr=PIPE, universal_newlines=True)
-    
     if verbose:
         sl_out = []
         while True:
@@ -84,17 +79,14 @@ class CoRe_index:
             print("Index found, updating...\n")
             self.pull(verbose=verbose, lfs=lfs)
         #
-
         self.nr_list, self.hyb_list = self.read_index()
         self.nr_dict = self.list_to_dict(self.nr_list)
         self.hyb_dict = self.list_to_dict(self.hyb_list)
         
     #
-
     def type(self):
         return type(self)
-    #
-      
+    # 
     def show(self, key):
         if key in vu.index_keys:
             try: 
@@ -112,41 +104,36 @@ class CoRe_index:
             print(vu.index_keys)
         #
     #
-
     def clone(self, dbdir='core_database_index', verbose=True, lfs=False,
-                protocol='https'):
+              protocol='https'):
         """
         Clones the git repository of the index at self.path
         """
+        if protocol=='ssh':
+            git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
+        elif protocol=='https':
+            git_repo = 'https://core-gitlfs.tpi.uni-jena.de/core_database/%s.git' % dbdir
+        else:
+            raise NameError("Protocol not supported!")
+        print('git-clone {} ...'.format(dbdir))
         if lfs:
-            if protocol=='ssh':
-                git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
-            elif protocol=='https':
-                git_repo = 'https://core-gitlfs.tpi.uni-jena.de/core_database/%s.git' % dbdir
-            else:
-                raise NameError("Protocol not supported!")
-            #
-            out, err = run(['git', 'lfs', 'clone', git_repo], self.path, True)
+            # 'git lfs clone' is deprecated and will not be updated
+            #  with new flags from 'git clone'
+            out, err = run(['git', 'lfs', 'clone',git_repo],self.path, True)
         #
         else:
-            if protocol=='ssh':
-                git_repo = 'git@core-gitlfs.tpi.uni-jena.de:core_database/%s.git' % dbdir
-            elif protocol=='https':
-                git_repo = 'https://core-gitlfs.tpi.uni-jena.de/core_database/%s.git' % dbdir
-            else:
-                raise NameError("Protocol not supported!")
-            #
-            out, err = run(['git', 'clone', git_repo], self.path, True)
+            out, err = run(['git','clone', git_repo], self.path, True)
         if verbose:
             print(out, err)
+        print('done!')
         #
     #
-    
     def pull(self, dbdir='core_database_index', verbose=True, lfs=False):
         """
         Pulls changes in the git repository of the index at self.path
         """
         workdir  = os.path.join(self.path, dbdir)
+        print('git-pull {} ...'.format(dbdir))
         if lfs:
             out, err = run(['git', 'lfs', 'install'], workdir, True)
             out, err = run(['git', 'lfs', 'pull', 'origin', 'master'], workdir, True)
@@ -154,10 +141,9 @@ class CoRe_index:
             out, err = run(['git', 'pull', 'origin', 'master'], workdir, True)
         if verbose:
             print(out, err)
+        print('done!')
         #
     #
-
-    
     def sync_database(self, path=None, db_list=None, verbose=True, lfs=False,
                         prot='https'):
         """
@@ -186,16 +172,14 @@ class CoRe_index:
             #
         #
     #   
-    
     def read_index(self):
         """
         Reads the .json file into a list of dictionaries.
         """
-        nr_db_json  = json.load(open(os.path.join(self.path, 'core_database_index/json/DB_NR.json')))
+        nr_db_json = json.load(open(os.path.join(self.path, 'core_database_index/json/DB_NR.json')))
         hyb_db_json = json.load(open(os.path.join(self.path, 'core_database_index/json/DB_Hyb.json')))
         return nr_db_json['data'], hyb_db_json['data']
     #
-    
     def find(self, key, value):
         """
         Returns a subset of the index with the entries
@@ -211,7 +195,6 @@ class CoRe_index:
         #
         return subset
     #            
-    
     def list_to_dict(self, i_list):
         """
         Ports a list of python dictionaries into a dictionary

@@ -174,6 +174,9 @@ def simlist_remove_dir(sl, db_path="./"):
     #
     return None
 #
+
+# SB following routine does not seem correct.
+#    Needs further checks and improvements
 def simlist_setup_new(sl, db_path, sim_name, code):
     """
     Returns the progressive simulation and run numbers
@@ -191,7 +194,7 @@ def simlist_setup_new(sl, db_path, sim_name, code):
             new_dir = os.path.join(db_path, run_path)
             os.mkdir(new_dir)
             sim['database_key'].replace('_', ':')
-            print("Added run R%02d to model %s." % (runnum, sim['database_key']))
+            print("Added run R%02d to simulation %s." % (runnum, sim['database_key']))
             return sim['database_key']
         #
         elif sim['database_key'].split(':')[0]==code:
@@ -205,10 +208,10 @@ def simlist_setup_new(sl, db_path, sim_name, code):
         new_dir = os.path.join(db_path, run_path)
         os.mkdir(os.path.join(db_path,path))
         os.mkdir(new_dir)
-        print("Created new database entry %s." % path.replace('_',':'))
+        print("Created new database simulation %s." % path.replace('_',':'))
         return path.replace('_', ':')
     #    
-    if not new_dir:
+    if not new_dir: 
         print("Run exists!")
         return None
     #

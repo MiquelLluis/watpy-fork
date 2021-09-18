@@ -195,7 +195,6 @@ def metadatafile_write(path='./', db_key=None, sim_name=None, code=None,
                 av_res.append(ddr)
             #
         #
-    #
         for r in av_res:
             if len(res)==0:
                 res = r

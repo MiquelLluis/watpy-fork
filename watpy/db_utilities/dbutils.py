@@ -9,9 +9,6 @@ Notes:
   or a list of dictionaries
 """
 
-__author__      = "S.Bernuzzi"
-__copyright__   = "Copyright 2017"
-
 import numpy as np
 import datetime
 import os, sys
@@ -35,15 +32,13 @@ class CoRe_database():
         self.sim_list = self.get_simulation_list()
         self.sims     = {}
         self.load_simulations()
-    #
-    
+    #    
     def type(self):
         """
         Returns the class type
         """
         return type(self)
     #
-
     def show(self, key, out=None):
         """
         For a given key, checks whether it is available for visualization
@@ -67,7 +62,6 @@ class CoRe_database():
             print(vu.database_keys)
         #
     #
-
     def load_simulations(self, in_list=None, out_sims=None):
         """
         Loads metadata information for all database entries in a list.
@@ -86,7 +80,6 @@ class CoRe_database():
         #
         return out_sims
     #
-
     def get_simulation_list(self):
         return slu.get_simlist(r'(\w+)_\d\d\d\d', self.path)
     #
@@ -112,9 +105,10 @@ class CoRe_database():
         self.load_simulations()
     #
     def setup_new_run(self, new_sim, code):
-        return  slu.simlist_setup_new(self.sim_list, self.path, new_sim, code)
+        return slu.simlist_setup_new(self.sim_list, self.path, new_sim, code)
     #
 #
+
 
 class CoRe_run():
     """
@@ -134,16 +128,14 @@ class CoRe_run():
         else:
             self.dfile = None
         #
-        self.h5    = h5u.h5(self.path,self.mdata, self.dfile)
+        self.h5 = h5u.h5(self.path,self.mdata, self.dfile)
     #
-
     def type(self):
         """
         Returns the class type
         """
         return type(self)
     #
-
     def create_metadata(self, new_dict=None):
         """
         Creates a new metadata file for the specific run. 
@@ -178,7 +170,6 @@ class CoRe_run():
         return mdu.get_metadata(self.path, 
             mdata_file='metadata.txt')
     #
-
     def clean_txt(self):
         """
         Removes all .txt files that are created when extracting
@@ -217,14 +208,12 @@ class CoRe_simulation():
             self.runs['R01'] = run
         #
     #
-
     def type(self):
         """
         Returns the class type
         """
         return type(self)
     #
-
     def create_metadata(self, new_dict=None):
         """
         Creates a new metadata file for the database 
