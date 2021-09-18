@@ -1,5 +1,141 @@
-from .utils import *
-from .units import *
+from .files import *
+from .numutils import diff1, diffo
+from .gwutils import fixed_freq_int_2, waveform2energetics, ret_time
+
+
+# ------------------------------------------------------------------
+# Routines for waveform files
+# ------------------------------------------------------------------
+
+
+def wave_prop_default():
+    """
+    Default properties for wave
+    """
+    return {
+        'lmode': None,
+        'mmode': None,
+        'mass': 1.0,
+        'detector.radius': None,
+        'init.frequency' : None,
+        'var': None
+    }
+
+
+def wfile_parse_name(fname):
+    """
+    Parse waveform filename, return var,(l,m)-indexes, detector radius
+    and data type 
+    ------
+    Input
+    -----
+    fname  : Name of the file to parse for information
+    """
+    #FIXME: negative modes?!
+    t = ['bam','cactus','core','core-energy']
+    s = [r'R(\w+)mode(\d)(\d)_r(\d+).l(\d+)',
+         r'mp_(\w+)_l(\d)_m(\d)_r(\d+\.\d\d).asc',
+         r'R(\w+)_l(\d+)_m(\d+)_r(\d+).txt',
+         r'EJ_r(\d+).txt']
+    vlmr = None
+    for tp, sm in zip(t,s):
+        name = re.match(sm, os.path.basename(fname))
+        if name is not None:
+            if tp == 'core-energy':
+                v    = 'EJ'
+                r    = float(name.group(1))
+                vlmr = (v,None,None,r,tp)
+                return vlmr
+            else:
+                v    = name.group(1)
+                l    = int(name.group(2))
+                m    = int(name.group(3))
+                r    = float(name.group(4))
+                vlmr = (v,l,m,r,tp)
+                return vlmr
+    return vlmr
+
+
+def wfile_get_detrad(fname):
+    """
+    Get detector radius from wf file header
+    ------
+    Input
+    -----
+    fname  : Name of the file to parse for information
+    """
+    s = extract_comments(fname, '"')
+    s = re.sub(r' ', '',s[0]).upper() 
+    return float(re.match('#R=%s', s))
+              
+
+def wfile_get_mass(fname):
+    """
+    Get binary mass from wf file header
+    ------
+    Input
+    -----
+    fname  : Name of the file to parse for information
+    """
+    s = extract_comments(fname, '"')
+    s = re.sub(r' ', '',s[1]).upper() 
+    return float(re.match('#M=%s', s))
+
+
+# BAM specials
+
+
+def wfile_get_detrad_bam(fname):
+    """
+    Get radius from wf BAM file header
+    '" Rpsi4:   r =     700.000000 "'
+    ------
+    Input
+    -----
+    fname  : Name of the file to parse for information
+    """
+    s = extract_comments(fname, '"')
+    return float(re.findall("\d+\.\d+",s[0])[0])
+
+
+# Cactus/THC specials
+
+
+def cactus_to_core(path, prop):
+    """
+    Read data from Cactus/WhiskyTHC simulation directory,
+    collate into a single file, load Psi4, evaluate h
+    and rewrite it into a CoRe-formatted file.
+    """
+    v   = prop['var']
+    l   = prop['lmode']
+    m   = prop['mmode']
+    r   = prop['detector.radius']
+
+    seg_tmpl = r'output-\d\d\d\d'
+    det      = float(r)
+
+    t   = np.array([])
+    var = np.array([])
+    for seg in os.listdir(path):
+        if re.match(seg_tmpl, seg):
+            fpath = '/data/mp_Psi4_l%d_m%d_r%.2f.asc' % (l, m, det)
+            raw   = np.loadtxt(os.path.join(path,seg+fpath))
+            t     = np.append(t, raw[:,0])
+            var   = np.append(var, raw[:,1]+raw[:,2]*1.0j)
+
+    t, msk = np.unique(t, axis=0, return_index=True)
+    var    = r * var[msk]
+    if v=='h':
+        fcut = prop['init.frequency']
+        var  = fixed_freq_int_2(var, fcut, dt=t[1]-t[0])
+
+    return t, var.real, var.imag
+
+
+# ------------------------------------------------------------------
+# Main classes for waveforms
+# ------------------------------------------------------------------
 
 
 class mwaves(object):
@@ -27,7 +163,7 @@ class mwaves(object):
     * data  : python dictionary of files loaded into the class
     """
 
-    def __init__(self, path='./', code='core', filenames=None, 
+    def __init__(self, path='.', code='core', filenames=None, 
                  mass=None, f0=None, ignore_negative_m=False):
         """
         Init info from files
@@ -85,18 +221,17 @@ class mwaves(object):
         self.mmode = sorted(list(set([m[1] for m in self.modes])))
         self.radii = sorted(list(self.radii))
         self.dtype = sorted(list(self.dtype))
-    #
 
     def type(self):
         return type(self)
-    #
+
     def get(self, var=None, l=None, m=None, r=None):
         """
         Get the multipole output for the given variable/multipole at the given
         extraction radius
         * var : if not specified it defaults to the first variable
-        * l   : if not specified it defaults to 2 (or the minimum l
-        if 2 is not available)
+        * l   : if not specified it defaults to 2 (or the minimum l if
+        2 is not available) 
         * m   : if not specified it defaults to 2 (or the minimum m
         if 2 is not available)
         * r   : if not specified it defaults to the maximum radius
@@ -118,7 +253,7 @@ class mwaves(object):
         key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)
         return wave(self.path, self.code, self.data[key][0],
                     self.mass, self.f0)
-    #
+
     def energetics(self, m1, m2, madm, jadm, 
                    radius=None, path_out=None):
         h     = {}
@@ -126,12 +261,11 @@ class mwaves(object):
         if radius is None: radius = self.radii[-1]
         for lm in self.modes:
             h[lm]     = self.get(l=lm[0], m=lm[1], r=radius)
-            h_dot[lm] = num.diff1(h[lm].time, h[lm].h)
-        #
+            h_dot[lm] = diff1(h[lm].time, h[lm].h)
         
         t = h[lm].time
-        self.e, self.edot, self.j, self.jdot = gwu.waveform2energetics(h, h_dot, t, 
-                                                                       self.modes, self.mmode)
+        self.e, self.edot, self.j, self.jdot = waveform2energetics(h, h_dot, t, 
+                                                                   self.modes, self.mmode)
 
         self.eb   = (madm - self.e - m1 -m2) / (m1*m2/(m1+m2))
         self.jorb = (jadm - self.j) / (m1*m2) 
@@ -144,9 +278,7 @@ class mwaves(object):
                          self.e, self.j, h[(2,2)].time]
             fname = "EJ_r%05d.txt" % int(radius)
             np.savetxt('{}/{}'.format(path_out,fname), data, header=headstr)
-        #
-    #    
-#
+
 
 
 class wave(object):
@@ -194,18 +326,14 @@ class wave(object):
             self.prop['init.frequency'] = f0
             if mass:
                 self.prop['mass'] = mass
-            #
             if self.prop['var']=='EJ':
                 self.readEJ(filename)
             else:
                 self.readtxt(filename)
-            #
-        #
-    #
 
     def type(self):
         return type(self)
-    #
+
     def readtxt(self, fname):
         """
         Read waveform data from ASCII file (columns 0,1,2)
@@ -220,7 +348,7 @@ class wave(object):
                                        comments=['#','"'])
         self.time, uniq = np.unique(self.time, axis=0, return_index=True)
         re, im = re[uniq], im[uniq]
-        # 
+
         if self.prop['var'] in ['Psi4','psi4']:
             self.prop['var'] = 'Psi4'
 
@@ -233,7 +361,7 @@ class wave(object):
                 self.prop['detector.radius'] = wfile_get_detrad_bam(os.path.join(self.path,fname))
 
             self.h    = self.get_strain()
-        #
+
         else:
             if self.code != 'core':
                 raise ValueError("Strain can be read only from CoRe data format.")
@@ -241,8 +369,7 @@ class wave(object):
             rp4, ip4  = np.loadtxt(os.path.join(self.path,fname.replace('Rh', 'Rpsi4')),
                                    unpack=True, usecols=[1,2])
             self.p4   = np.array(re) + 1j *np.array(im)
-        #
-    #        
+
     def write_to_txt(self, var, path):
         """ 
         Writes waveform data (h) in ASCII file standard format (CoRe)
@@ -267,7 +394,7 @@ class wave(object):
                      self.amplitude(var)*R/M, self.phase(var), self.time]
             fname = 'Rh_l%d_m%d_r%05d.txt' % (self.prop['lmode'], self.prop['mmode'], R)
         return np.savetxt(os.path.join(path,fname), data, header=headstr)
-    #
+
     def show_strain(self, to_file=None):
         """
         Show strain and instantaneous frequency
@@ -286,7 +413,7 @@ class wave(object):
         ax[0].set_xlim([0, u.max()])
         if to_file: plt.savefig(to_file)
         return fig
-    #
+
     def show_psi4(self, to_file=None):
         """
         Show Psi4 and instantaneous frequency
@@ -306,7 +433,7 @@ class wave(object):
         ax[0].legend()
         if to_file: plt.savefig(to_file)
         return fig
-    #
+
     def prop_read_from_file(self, filename):
         """
         Read wf properties from file
@@ -317,23 +444,21 @@ class wave(object):
         """
         fname= os.path.join(self.path,filename)
         vlmr = wfile_parse_name(fname)
-        #
+
         if vlmr:
             var, l, m, r, tp = vlmr
             self.prop['var']             = var
             self.prop['lmode']           = l
             self.prop['mmode']           = m
             self.prop['detector.radius'] = r
-        #
-    #
+
     def prop_list(self):
         """
         Print the properties
         """
         for key, vak in self.prop.items():
             print(key+":"+val)
-        #
-    #
+
     def prop_set(self, key, val):
         """
         Set property
@@ -344,7 +469,7 @@ class wave(object):
         val  : New value for the property
         """
         self.prop[key] = val
-    #                         
+
     def prop_get(self, key):
         """
         Get property
@@ -354,13 +479,13 @@ class wave(object):
         key  : Which property to get
         """
         return self.prop[key]
-    #
+
     def prop_get_all(self):
         """
         Get all properties (return a dict)
         """
         return self.prop
-    #
+
     def data_clean(self):
         """
         Cleanup data
@@ -368,7 +493,7 @@ class wave(object):
         self.time = []
         self.h    = []
         self.p4   = []
-    #                         
+
     def amplitude(self,var=None):
         """
         Return amplitude
@@ -381,7 +506,7 @@ class wave(object):
             return np.abs(self.p4)
         else:
             return np.abs(self.h)
-    #
+
     def phase(self,var=None):
         """
         Return unwrapped phase
@@ -394,7 +519,7 @@ class wave(object):
             return -np.unwrap(np.angle(self.p4))
         else:
             return -np.unwrap(np.angle(self.h))
-    #
+
     def phase_diff1(self, var=None, pad=True):
         """
         Return frequency wrt to time using finite diff 2nd order
@@ -405,8 +530,8 @@ class wave(object):
         var  : Which variable to return (psi4 or h)
         pad  : Set to True to obtain an array of the same lenght as self.time.
         """
-        return num.diff1(self.time,self.phase(var),pad=pad)
-    #                         
+        return diff1(self.time,self.phase(var),pad=pad)
+
     def phase_diffo(self, var=None, o=4):
         """
         Return frequency wrt to time using finite differencing centered of
@@ -417,14 +542,14 @@ class wave(object):
         var  : Which variable to return (psi4 or h)
         o    : Specify order for the finite differencing (defaults to 4)        
         """
-        return num.diffo(self.time,self.phase(var), o)
-    #        
+        return diffo(self.time,self.phase(var), o)
+
     def time_ret(self):
         """
         Retarded time based on tortoise Schwarzschild coordinate
         """
-        return phu.ret_time(self.time,self.prop["detector.radius"], self.prop["mass"])
-    #                         
+        return ret_time(self.time,self.prop["detector.radius"], self.prop["mass"])
+
     def data_interp1(self, timei, useu=0, kind='linear'):
         """
         Return data interpolated on time 
@@ -438,7 +563,7 @@ class wave(object):
             return np.interp1(timei, self.time_ret()/self.prop["mass"], self.h,kind=kind)
         else:
             return np.interp1(timei, self.time, self.h,kind=kind)
-    #
+
     def get_strain(self, fcut=-1, win=1.):
         """
         Return strain. Compute it first, if Psi4 is stored.
@@ -447,64 +572,7 @@ class wave(object):
             if fcut < 0. :
                 fcut = 2 * self.prop['init.frequency'] / max(1,abs(self.prop['mmode']))
             dt = self.time[1] - self.time[0]
-            return win * gwu.fixed_freq_int_2( win * self.p4, fcut, dt = dt)
+            return win * fixed_freq_int_2( win * self.p4, fcut, dt = dt)
         else:
             return self.h
-        #
-    # These below are quite redundant
-    # def get_complex(self, var):
-    #     """
-    #     Return complex waveform
-    #     ------
-    #     Input
-    #     -----
-    #     var  : Which variable to return (psi4 or h)
-    #     """
-    #     if var=='Psi4':
-    #         return self.p4
-    #     else:
-    #         return self.h
-    # #                         
-    # def real(self, var):
-    #     """
-    #     Return real part
-    #     ------
-    #     Input
-    #     -----
-    #     var  : Which variable to return (psi4 or h)
-    #     """
-    #     if var=='Psi4':
-    #         return self.p4.real
-    #     else:
-    #         return self.h.real
-    # #                         
-    # def imag(self, var):
-    #     """
-    #     Return imag part
-    #     ------
-    #     Input
-    #     -----
-    #     var  : Which variable to return (psi4 or h)
-    #     """
-    #     if var=='Psi4':
-    #         return self.p4.imag
-    #     else:
-    #         return self.h.imag
-    # #                   
-    # energetics would belong to multipolar waves
-    # def readEJ(self, fname):
-    #     """
-    #     Read waveform energetics from ASCII file (columns 0,1,2)
-    #     ------
-    #     Input
-    #     -----
-    #     fname  : Name of the file to be loaded
-    #     """
-    #     if self.code in ['cactus','bam']:
-    #         raise ValueError("Energetics are not a direct output of BAM/cactus simulations!")
-    #     #
-    #     else:
-    #         self.time, self.e, self.j = np.loadtxt(os.path.join(self.path,fname), unpack=True, usecols=[0,1,2])
-    # #
-#         
 

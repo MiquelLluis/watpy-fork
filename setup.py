@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='watpy3',
+    name='watpy',
     version='1.0',
     description='Waveform Analysis Tool in Python',
     author='AAVV',

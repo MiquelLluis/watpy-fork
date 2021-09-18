@@ -1,12 +1,11 @@
-#!/usr/local/bin/python
-
-import sys 
 import numpy as np
-import warnings as wrn
+from numpy import inf
+
 
 # ------------------------------------------------------------------
 # Numerical utilities 
 # ------------------------------------------------------------------
+
 
 def linterp(ti,t,y):
     """
