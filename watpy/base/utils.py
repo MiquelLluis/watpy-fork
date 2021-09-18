@@ -13,101 +13,6 @@ from . import num_utils as num
 from . import gw_utils as gwu
 
 # ------------------------------------------------------------------
-# General 
-# ------------------------------------------------------------------
-
-def wave_prop_default():
-    """
-    Default properties for wave
-    """
-    return {
-        'lmode': None,
-        'mmode': None,
-        'mass': 1.0,
-        'detector.radius': None,
-        'init.frequency' : None,
-        'var': None
-    }
-#
-
-def wfile_parse_name(fname):
-    """
-    Parse waveform filename, return var,(l,m)-indexes, detector radius
-    and data type 
-    ------
-    Input
-    -----
-    fname  : Name of the file to parse for information
-    """
-    t = {}
-    t['bam']    = r'(\w+)mode(\d)(m?)(\d)_r(\d+).l(\d+)'
-    t['core']   = r'(\w+)_l(\d+)_m(\d+)_r(\d+).txt'
-    t['cactus'] = r'mp_(\w+)_l(\d+)_m(\d+)_r(\d+\.\d\d).asc'
-    t['energ']  = r'(\w+)_r(\d+).txt'
-    vlmr = ()
-    for tp, sm in t.items():
-        name = re.match(sm, os.path.basename(fname))
-        if name is not None:
-            if tp != 'energ':
-                v    = name.group(1)
-                l    = int(name.group(2))
-                m    = int(name.group(3))
-                r    = float(name.group(4))
-
-                vlmr = (v,l,m,r, tp)
-            else:
-                v    = name.group(1)
-                r    = float(name.group(2))
-
-                vlmr = (v,None,None,r,tp)
-            #
-        #
-    #
-    return vlmr
-#
-
-def wfile_get_detrad(fname):
-    """
-    Get detector radius from wf file header
-    ------
-    Input
-    -----
-    fname  : Name of the file to parse for information
-    """
-    s = extract_comments(fname, '"')
-    s = re.sub(r' ', '',s[0]).upper() # rm white spaces
-    return float(re.match('#R=%s', s))
-              
-def wfile_get_mass(fname):
-    """
-    Get binary mass from wf file header
-    ------
-    Input
-    -----
-    fname  : Name of the file to parse for information
-    """
-    s = extract_comments(fname, '"')
-    s = re.sub(r' ', '',s[1]).upper() # rm white spaces
-    return float(re.match('#M=%s', s))
-
-# ------------------------------------------------------------------
-# BAM
-# ------------------------------------------------------------------
-
-def wfile_get_detrad_bam(fname):
-    """
-    Get radius from wf BAM file header
-    '" Rpsi4:   r =     700.000000 "'
-    ------
-    Input
-    -----
-    fname  : Name of the file to parse for information
-    """
-    s = extract_comments(fname, '"')
-    s = re.sub(r' ', '',s[0]).upper() # rm white spaces
-    return float(re.match('"Rpsi4:r=(\d+\.\d+)"', s))
-
-# ------------------------------------------------------------------
 # Strings, files manipulation
 # ------------------------------------------------------------------
 
@@ -252,6 +157,142 @@ def loadtxt_comments(fname, com_str=['#','"']):
     data = np.loadtxt(fname, delimiter=comm_str)
     return data, comments
 
+# ------------------------------------------------------------------
+# Waveform files
+# ------------------------------------------------------------------
+
+def wave_prop_default():
+    """
+    Default properties for wave
+    """
+    return {
+        'lmode': None,
+        'mmode': None,
+        'mass': 1.0,
+        'detector.radius': None,
+        'init.frequency' : None,
+        'var': None
+    }
+#
+
+def wfile_parse_name(fname):
+    """
+    Parse waveform filename, return var,(l,m)-indexes, detector radius
+    and data type 
+    ------
+    Input
+    -----
+    fname  : Name of the file to parse for information
+    """
+    #FIXME: negative modes?!
+    t = ['bam','cactus','core','core-energy']
+    s = [r'R(\w+)mode(\d)(\d)_r(\d+).l(\d+)',
+         r'mp_(\w+)_l(\d)_m(\d)_r(\d+\.\d\d).asc',
+         r'R(\w+)_l(\d+)_m(\d+)_r(\d+).txt',
+         r'EJ_r(\d+).txt']
+    vlmr = None
+    for tp, sm in zip(t,s): #t.items():
+        name = re.match(sm, os.path.basename(fname))
+        if name is not None:
+            if tp == 'core-energy':
+                v    = 'EJ'
+                r    = float(name.group(1))
+                vlmr = (v,None,None,r,tp)
+                return vlmr
+            else:
+                v    = name.group(1)
+                l    = int(name.group(2))
+                m    = int(name.group(3))
+                r    = float(name.group(4))
+                vlmr = (v,l,m,r,tp)
+                return vlmr
+            #
+        #
+    #
+    return vlmr
+
+#     SB I think the logic of this routine is wrong
+#     the 'core'energy' match is compatible with the 'core' 
+#     and has random behaviour
+#     re-written above
+#
+# def wfile_parse_name(fname):
+#     """
+#     Parse waveform filename, return var,(l,m)-indexes, detector radius
+#     and data type 
+#     ------
+#     Input
+#     -----
+#     fname  : Name of the file to parse for information
+#     """
+#     #FIXME: negative modes?!
+#     t = {}
+#     t['bam']    = r'R(\w+)mode(\d)(\d)_r(\d+).l(\d+)'
+#     #t['bam']    = r'(\w+)mode(\d)(m?)(\d)_r(\d+).l(\d+)'
+#     t['core']   = r'R(\w+)_l(\d+)_m(\d+)_r(\d+).txt'
+#     t['cactus'] = r'mp_(\w+)_l(\d+)_m(\d+)_r(\d+\.\d\d).asc'
+#     t['core-energy']  = r'(\w+)_r(\d+).txt'
+#     vlmr = ()
+#     for tp, sm in t.items():
+#         name = re.match(sm, os.path.basename(fname))
+#         if name is not None:
+#             if tp != 'core-energy':
+#                 v    = name.group(1)
+#                 l    = int(name.group(2))
+#                 m    = int(name.group(3))
+#                 r    = float(name.group(4))
+#                 vlmr = (v,l,m,r,tp)
+#                 return vlmr
+#             else:
+#                 v    = name.group(1)
+#                 r    = float(name.group(2))
+#                 vlmr = (v,None,None,r,tp)
+#                 return vlmr
+#             #
+#         #
+#     #
+#     return None
+
+def wfile_get_detrad(fname):
+    """
+    Get detector radius from wf file header
+    ------
+    Input
+    -----
+    fname  : Name of the file to parse for information
+    """
+    s = extract_comments(fname, '"')
+    s = re.sub(r' ', '',s[0]).upper() 
+    return float(re.match('#R=%s', s))
+              
+def wfile_get_mass(fname):
+    """
+    Get binary mass from wf file header
+    ------
+    Input
+    -----
+    fname  : Name of the file to parse for information
+    """
+    s = extract_comments(fname, '"')
+    s = re.sub(r' ', '',s[1]).upper() 
+    return float(re.match('#M=%s', s))
+
+# BAM specials
+
+def wfile_get_detrad_bam(fname):
+    """
+    Get radius from wf BAM file header
+    '" Rpsi4:   r =     700.000000 "'
+    ------
+    Input
+    -----
+    fname  : Name of the file to parse for information
+    """
+    s = extract_comments(fname, '"')
+    return float(re.findall("\d+\.\d+",s[0])[0])
+
+# THC/cactus specials
+
 def thc_to_core(path, prop):
     """
     Read data from WhiskyTHC simulation directory,
@@ -278,7 +319,7 @@ def thc_to_core(path, prop):
     #
 
     t, msk = np.unique(t, axis=0, return_index=True)
-    var    = var[msk]
+    var    = r * var[msk]
     if v=='h':
         fcut = prop['init.frequency']
         var  = gwu.fixed_freq_int_2(var, fcut, dt=t[1]-t[0])

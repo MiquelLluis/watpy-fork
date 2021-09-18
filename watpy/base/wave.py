@@ -1,6 +1,7 @@
 from .utils import *
 from .units import *
 
+
 class mwaves(object):
     """ 
     Class for multipolar or multiple waveform data
@@ -45,26 +46,35 @@ class mwaves(object):
         self.radii = set([])
         self.files = set([])
         self.dtype = set([])
-   
+
+        if self.code not in ['bam','cactus','core']:
+            raise ValueError("unknown code {}".format(self.code))
+        
         for fname in filenames:
             vlmr = wfile_parse_name(fname)
             if vlmr:
                 var, l, m, r, tp = vlmr
                 if ignore_negative_m and m < 0:
                     continue
-                # overwrite r with better value if possible
-                if tp == 'bam':  r = wfile_get_detrad_bam(fname)
-                if tp == 'core': r = wfile_get_detrad(fname)
 
+                # take care of special conventions, 
+                # overwrite better values if possible
+                if tp == 'bam':
+                    r = wfile_get_detrad_bam(os.path.join(self.path,fname))
+                    if var == 'psi4': var = 'Psi4'
+                if tp == 'core':
+                    r = wfile_get_detrad(os.path.join(self.path,fname))
+                    if var == 'psi4': var = 'Psi4'
+                    
                 self.vars.add(var)
                 self.lmode.add(l)
                 self.mmode.add(m)
                 self.modes.add((l,m))
                 self.radii.add(r)
                 #self.dtype.add(tp)
-
-                key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)
-                if self.data.has_key(key):
+                
+                key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)                
+                if key in self.data:
                     self.data[key].append(fname)
                 else:
                     self.data[key] = [fname]
@@ -80,7 +90,6 @@ class mwaves(object):
     def type(self):
         return type(self)
     #
-
     def get(self, var=None, l=None, m=None, r=None):
         """
         Get the multipole output for the given variable/multipole at the given
@@ -107,12 +116,11 @@ class mwaves(object):
         if r is None:
             r = self.radii[-1]
         key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)
-        #return np.loadtxt(self.data[key])
         return wave(self.path, self.code, self.data[key][0],
                     self.mass, self.f0)
     #
     def energetics(self, m1, m2, madm, jadm, 
-                   radius=None, txt_out=None):
+                   radius=None, path_out=None):
         h     = {}
         h_dot = {}
         if radius is None: radius = self.radii[-1]
@@ -120,25 +128,26 @@ class mwaves(object):
             h[lm]     = self.get(l=lm[0], m=lm[1], r=radius)
             h_dot[lm] = num.diff1(h[lm].time, h[lm].h)
         #
+        
         t = h[lm].time
         self.e, self.edot, self.j, self.jdot = gwu.waveform2energetics(h, h_dot, t, 
-                                                            self.modes, self.mmode)
+                                                                       self.modes, self.mmode)
 
         self.eb   = (madm - self.e - m1 -m2) / (m1*m2/(m1+m2))
         self.jorb = (jadm - self.j) / (m1*m2) 
 
-        if txt_out:
-            headstr  = "# r=%e\n # M=%e\n " % (radius, self.mass)
-            headstr += "# J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4 t:5"
+        if path_out:
+            headstr  = "r=%e\nM=%e\n " % (radius, self.mass)
+            headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4 t:5"
 
             data = np.c_[self.jorb, self.eb, h[(2,2)].time_ret()/self.mass,
                          self.e, self.j, h[(2,2)].time]
             fname = "EJ_r%05d.txt" % int(radius)
-
-            np.savetxt(fname, data, header=headstr)
+            np.savetxt('{}/{}'.format(path_out,fname), data, header=headstr)
         #
     #    
 #
+
 
 class wave(object):
     """ 
@@ -151,7 +160,7 @@ class wave(object):
     code      : Which code/format the data are saved in (core, cactus, bam)
     filenames : List of files to be loaded
     mass      : ADM mass of the system
-    f0        : Initial garvitational wave frequency of the system
+    f0        : Initial gravitational wave frequency of the system
 
     ignore_negative_m : Whether or not to load the negative m modes
 
@@ -167,24 +176,28 @@ class wave(object):
     * h    : Wave strain (complex-valued)
     """
     
-    def __init__(self, path='./', code='core', filename=None, 
+    def __init__(self, path='.', code='core', filename=None, 
                  mass=None, f0=None):
         """
         Initialise a waveform
         """
         self.path = path
+        
         self.code = code
+        if self.code not in ['bam','cactus','core']:
+            raise ValueError("unknown code {}".format(self.code))
+
         self.prop = wave_prop_default()
+
         if filename is not None:
             self.prop_read_from_file(filename)
             self.prop['init.frequency'] = f0
             if mass:
-                self.prop['mass']       = mass
+                self.prop['mass'] = mass
             #
             if self.prop['var']=='EJ':
                 self.readEJ(filename)
             else:
-                #print "wait"
                 self.readtxt(filename)
             #
         #
@@ -193,22 +206,6 @@ class wave(object):
     def type(self):
         return type(self)
     #
-    
-    def readEJ(self, fname):
-        """
-        Read waveform energetics from ASCII file (columns 0,1,2)
-        ------
-        Input
-        -----
-        fname  : Name of the file to be loaded
-        """
-        if self.code=='cactus':
-            print( "Energetics are not a direct output in cactus simulations!")
-        #
-        else:
-            self.time, self.e, self.j = np.loadtxt(os.path.join(self.path,fname), unpack=True, usecols=[0,1,2])
-        #
-    #        
     def readtxt(self, fname):
         """
         Read waveform data from ASCII file (columns 0,1,2)
@@ -217,22 +214,29 @@ class wave(object):
         -----
         fname  : Name of the file to be loaded
         """
-        if self.code=='cactus':
-            self.time, re, im = thc_to_core(self.path, self.prop)
-        #
-        else:
-            self.time, re, im = np.loadtxt(os.path.join(self.path,fname), unpack=True, usecols=[0,1,2])
-        #
-        
-        if self.prop['var']=='Psi4':
+        self.time, re, im = np.loadtxt(os.path.join(self.path,fname),
+                                       unpack=True,
+                                       usecols=[0,1,2],
+                                       comments=['#','"'])
+        self.time, uniq = np.unique(self.time, axis=0, return_index=True)
+        re, im = re[uniq], im[uniq]
+        # 
+        if self.prop['var'] in ['Psi4','psi4']:
+            self.prop['var'] = 'Psi4'
+
             self.p4   = np.array(re) + 1j *np.array(im)
-            self.h    = self.get_strain()
-        #
-        elif self.prop['var']=='Rpsi4':
-            self.p4   = (np.array(re) + 1j *np.array(im))/self.prop['detector.radius']
+
+            # take care of special conventions
+            if self.code == 'cactus':
+                self.p4 *= self.prop['detector.radius']
+            if self.code == 'bam':
+                self.prop['detector.radius'] = wfile_get_detrad_bam(os.path.join(self.path,fname))
+
             self.h    = self.get_strain()
         #
         else:
+            if self.code != 'core':
+                raise ValueError("Strain can be read only from CoRe data format.")
             self.h    = np.array(re) + 1j *np.array(im)
             rp4, ip4  = np.loadtxt(os.path.join(self.path,fname.replace('Rh', 'Rpsi4')),
                                    unpack=True, usecols=[1,2])
@@ -250,41 +254,58 @@ class wave(object):
         """
         M        = self.prop["mass"]
         R        = self.prop['detector.radius']
-        headstr  = "# r=%e\n" %(self.prop["detector.radius"])
-        headstr += "# M=%e\n" %(M)
+        headstr  = "r=%e\n" %(self.prop["detector.radius"])
+        headstr += "M=%e\n" %(M)
         if var=='Psi4':
-            headstr += "# u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6"
+            headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6"
             data = np.c_[self.time_ret()/M, self.p4.real*R/M, self.p4.imag*R/M, M*self.phase_diff1(var),
                      self.amplitude(var)*R/M, self.phase(var), self.time]
             fname = 'Rpsi4_l%d_m%d_r%05d.txt' % (self.prop['lmode'], self.prop['mmode'], R)
         else:
-            headstr += "# u/M:0 Reh/M:1 Imh/M:2 Momega:3 A/M:4 phi:5 t:6"
+            headstr += "u/M:0 Reh/M:1 Imh/M:2 Momega:3 A/M:4 phi:5 t:6"
             data = np.c_[self.time_ret()/M, self.h.real*R/M, self.h.imag*R/M, M*self.phase_diff1(var),
                      self.amplitude(var)*R/M, self.phase(var), self.time]
             fname = 'Rh_l%d_m%d_r%05d.txt' % (self.prop['lmode'], self.prop['mmode'], R)
-        
         return np.savetxt(os.path.join(path,fname), data, header=headstr)
     #
-    def show(self):
+    def show_strain(self, to_file=None):
         """
-        Show l=2 m=2 strain and instantaneous frequency
+        Show strain and instantaneous frequency
         """
+        u = self.time_ret()/self.prop['mass']
+        Rh = self.h /self.prop['mass']
+        omega = self.prop['mass'] * self.phase_diff1()
         import matplotlib.pyplot as plt
-
         fig, ax = plt.subplots(2,1, sharex=True)
-
-        ax[0].plot(self.time_ret()/self.prop['mass'], 
-                   self.real()*self.prop['detector.radius']/self.prop['mass'])
-        ax[1].plot(self.time_ret()/self.prop['mass'], 
-                   np.abs(self.prop['mass']*self.phase_diff1()))
-
-        ax[1].set_xlabel(r'$u\, /\, M$')
-        ax[0].set_ylabel(r'$r_{ext}\, \mathcal{R} (h_{2,2})\, /\, M$')
-        ax[1].set_ylabel(r'$M\, \omega$')
-
-        ax[0].set_xlim([0, self.time_ret().max()/self.prop['mass']])
-
-        plt.savefig('h_f_l2m2.pdf')
+        ax[0].plot(u, Rh.real, label='Real part')
+        ax[0].plot(u, np.abs(Rh), label='Amplitude')
+        ax[1].plot(u, omega)
+        ax[1].set_xlabel(r'$u/M$')
+        ax[0].set_ylabel(r'$R/M\, h_{{{}{}}}$'.format(self.prop['lmode'],self.prop['mmode']))
+        ax[1].set_ylabel(r'$M\,\omega$')
+        ax[0].set_xlim([0, u.max()])
+        if to_file: plt.savefig(to_file)
+        return fig
+    #
+    def show_psi4(self, to_file=None):
+        """
+        Show Psi4 and instantaneous frequency
+        """
+        u = self.time_ret()/self.prop['mass']
+        Rh = self.p4 
+        omega = self.prop['mass'] * self.phase_diff1(var='Psi4')
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(2,1, sharex=True)
+        ax[0].plot(u, Rh.real, label='Real part')
+        ax[0].plot(u, np.abs(Rh), label='Amplitude')
+        ax[1].plot(u, omega)
+        ax[1].set_xlabel(r'$u/M$')
+        ax[0].set_ylabel(r'$R\,\psi_{{{}{}}}$'.format(self.prop['lmode'],self.prop['mmode']))
+        ax[1].set_ylabel(r'$M\,\omega$')
+        ax[0].set_xlim([0, u.max()])
+        ax[0].legend()
+        if to_file: plt.savefig(to_file)
+        return fig
     #
     def prop_read_from_file(self, filename):
         """
@@ -299,7 +320,6 @@ class wave(object):
         #
         if vlmr:
             var, l, m, r, tp = vlmr
-
             self.prop['var']             = var
             self.prop['lmode']           = l
             self.prop['mmode']           = m
@@ -349,7 +369,7 @@ class wave(object):
         self.h    = []
         self.p4   = []
     #                         
-    def amplitude(self,var):
+    def amplitude(self,var=None):
         """
         Return amplitude
         ------
@@ -357,12 +377,12 @@ class wave(object):
         -----
         var  : Which variable to return (psi4 or h)
         """
-        if var=='psi4':
+        if var=='Psi4':
             return np.abs(self.p4)
         else:
             return np.abs(self.h)
     #
-    def phase(self,var):
+    def phase(self,var=None):
         """
         Return unwrapped phase
         ------
@@ -370,12 +390,12 @@ class wave(object):
         -----
         var  : Which variable to return (psi4 or h)
         """
-        if var=='psi4':
+        if var=='Psi4':
             return -np.unwrap(np.angle(self.p4))
         else:
             return -np.unwrap(np.angle(self.h))
     #
-    def phase_diff1(self, var, pad=True):
+    def phase_diff1(self, var=None, pad=True):
         """
         Return frequency wrt to time using finite diff 2nd order
         centered (works for nonuniform time). 
@@ -387,7 +407,7 @@ class wave(object):
         """
         return num.diff1(self.time,self.phase(var),pad=pad)
     #                         
-    def phase_diffo(self, var, o=4):
+    def phase_diffo(self, var=None, o=4):
         """
         Return frequency wrt to time using finite differencing centered of
         higher order (works with uniform time)
@@ -399,58 +419,15 @@ class wave(object):
         """
         return num.diffo(self.time,self.phase(var), o)
     #        
-###############################################################################
-# These below are quite redundant and way inefficient                         #
-###############################################################################                 
-    def get_complex(self, var):
-        """
-        Return complex waveform
-        ------
-        Input
-        -----
-        var  : Which variable to return (psi4 or h)
-        """
-        if var=='psi4':
-            return self.p4
-        else:
-            return self.h
-    #                         
-    def real(self, var):
-        """
-        Return real part
-        ------
-        Input
-        -----
-        var  : Which variable to return (psi4 or h)
-        """
-        if var=='psi4':
-            return self.p4.real
-        else:
-            return self.h.real
-    #                         
-    def imag(self, var):
-        """
-        Return imag part
-        ------
-        Input
-        -----
-        var  : Which variable to return (psi4 or h)
-        """
-        if var=='psi4':
-            return self.p4.imag
-        else:
-            return self.h.imag
-    #                    
-#################################################################################     
     def time_ret(self):
         """
         Retarded time based on tortoise Schwarzschild coordinate
         """
         return phu.ret_time(self.time,self.prop["detector.radius"], self.prop["mass"])
     #                         
-    def data_interp1(self, timei, useu=0):
+    def data_interp1(self, timei, useu=0, kind='linear'):
         """
-        Return data interpolated on time (linear iterp)
+        Return data interpolated on time 
         ------
         Input
         -----
@@ -458,28 +435,76 @@ class wave(object):
         useu   : If set to True (or a positive value) assumes that time = (retarded time)/M
         """
         if useu:
-            return np.interp1(timei, self.time_ret()/self.prop["mass"], self.h)
+            return np.interp1(timei, self.time_ret()/self.prop["mass"], self.h,kind=kind)
         else:
-            return np.interp1(timei, self.time, self.h)
-    #                         
-    def data_interpN(self, timei):
-        """
-        Return data interpolated on time at high order
-        ------
-        Input
-        -----
-        timei  : New time array over which to interpolate the data        
-        """
-        return None #TODO high-order interp
+            return np.interp1(timei, self.time, self.h,kind=kind)
     #
-    def get_strain(self):
+    def get_strain(self, fcut=-1, win=1.):
         """
         Return strain. Compute it first, if Psi4 is stored.
         """
         if self.prop['var']=='Psi4':
-            return gwu.fixed_freq_int_2(self.p4, self.prop['init.frequency'], 
-                        dt=self.time[1]-self.time[0])
+            if fcut < 0. :
+                fcut = 2 * self.prop['init.frequency'] / max(1,abs(self.prop['mmode']))
+            dt = self.time[1] - self.time[0]
+            return win * gwu.fixed_freq_int_2( win * self.p4, fcut, dt = dt)
         else:
             return self.h
         #
-    #
+    # These below are quite redundant
+    # def get_complex(self, var):
+    #     """
+    #     Return complex waveform
+    #     ------
+    #     Input
+    #     -----
+    #     var  : Which variable to return (psi4 or h)
+    #     """
+    #     if var=='Psi4':
+    #         return self.p4
+    #     else:
+    #         return self.h
+    # #                         
+    # def real(self, var):
+    #     """
+    #     Return real part
+    #     ------
+    #     Input
+    #     -----
+    #     var  : Which variable to return (psi4 or h)
+    #     """
+    #     if var=='Psi4':
+    #         return self.p4.real
+    #     else:
+    #         return self.h.real
+    # #                         
+    # def imag(self, var):
+    #     """
+    #     Return imag part
+    #     ------
+    #     Input
+    #     -----
+    #     var  : Which variable to return (psi4 or h)
+    #     """
+    #     if var=='Psi4':
+    #         return self.p4.imag
+    #     else:
+    #         return self.h.imag
+    # #                   
+    # energetics would belong to multipolar waves
+    # def readEJ(self, fname):
+    #     """
+    #     Read waveform energetics from ASCII file (columns 0,1,2)
+    #     ------
+    #     Input
+    #     -----
+    #     fname  : Name of the file to be loaded
+    #     """
+    #     if self.code in ['cactus','bam']:
+    #         raise ValueError("Energetics are not a direct output of BAM/cactus simulations!")
+    #     #
+    #     else:
+    #         self.time, self.e, self.j = np.loadtxt(os.path.join(self.path,fname), unpack=True, usecols=[0,1,2])
+    # #
+#         
+
