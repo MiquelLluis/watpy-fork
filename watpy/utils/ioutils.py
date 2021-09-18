@@ -1,5 +1,6 @@
 import sys, os, re 
 import warnings as wrn
+from subprocess import Popen, PIPE
 
 import numpy as np
 from numpy import inf
@@ -243,5 +244,91 @@ def write_dict_into_txt(d, filename, sep_char='='):
     return None
 
 
+#---------------------------------------------------------------------------
+# os, bash, etc 
+#---------------------------------------------------------------------------
 
 
+def runcmd(cmd, workdir, out, verbose=False):
+    """
+    Given a command and a working directory, run the command
+    from the bash shell in the given directory.
+    --------
+    Input:
+    --------
+    cmd      : Command to be run in the bash shell as a list of strings
+    workdir  : Directory where to run the command
+    out      : If not None, standard output/error are given as output
+    verbose  : If True, print more information on screen while running.
+
+    --------
+    Output:
+    --------
+    sl_out   : Standard output from the bash command
+    sl_err   : Standard error from the bash command
+    """
+    proc = Popen(cmd, cwd=workdir, stdout=PIPE,
+                 stderr=PIPE, universal_newlines=True)
+    if verbose:
+        sl_out = []
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            else:
+                if line is not None:
+                    sys.stdout.write(line)
+                    sl_out.append(line)
+        sl_out = "".join(sl_out)
+    else:
+        sl_out, sl_err = proc.communicate()
+    if type(out)==str:
+        open(os.path.join(workdir, out), "w").write(out)
+        return out
+    elif out is not None:
+        return sl_out, sl_err
+
+
+def git_clone(server = "core-gitlfs.tpi.uni-jena.de",
+              gitbase = "core_database",
+              protocol = 'https'
+              repo = 'core_database_index',
+              verbose=True, lfs=False):
+    """
+    Clones a git repository 
+    """
+    pre = {'ssh': 'git@', 'https':'https://'}
+    sep = {'ssh': ':'   , 'https':'/'}
+    if protocol not in pre.keys():
+        raise NameError("Protocol not supported!")
+    git_repo = '{}{}{}{}{}.git'.format(pre[protocol],server,
+                                       sep[protocol],gitbase,repo)
+    print('git-clone {} ...'.format(dbdir))
+    if lfs:
+        # 'git lfs clone' is deprecated and will not be updated
+        #  with new flags from 'git clone'
+        out, err = runcmd(['git','lfs', 'clone',git_repo],self.path,True)
+        #
+    else:
+        out, err = runcmd(['git','clone', git_repo], self.path, True)
+    if verbose:
+        print(out, err)
+    print('done!')
+
+
+def git_pull(path = '.',
+             repo = 'core_database_index',
+             verbose=True, lfs=False):
+    """
+    Pulls changes in a git repository located in a path
+    """
+    workdir = os.path.join(path, repo)
+    print('git-pull {} ...'.format(repo))
+    if lfs:
+        out, err = runcmd(['git', 'lfs', 'install'], workdir, True)
+        out, err = runcmd(['git', 'lfs', 'pull', 'origin', 'master'], workdir, True)
+    else:
+        out, err = runcmd(['git', 'pull', 'origin', 'master'], workdir, True)
+    if verbose:
+        print(out, err)
+    print('done!')
