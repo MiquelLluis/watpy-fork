@@ -132,7 +132,7 @@ class CoRe_h5():
         --------
         Output:
         --------
-        u       : Tortoise coordinate
+        u       : Retarded time / binary mass
         y       : Complex-valued strain (or weyl scalar)
         """
         lm = var.split('_')[1]

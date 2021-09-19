@@ -1,4 +1,4 @@
-import sys, os, re 
+import sys, os, re, datetime
 import warnings as wrn
 from subprocess import Popen, PIPE
 
@@ -161,8 +161,22 @@ def loadtxt_comments(fname, com_str=['#','"']):
     return data, comments
 
 
+def remove_template_missed_keys(string):
+    """
+    Remove the matches to ${ .*? } 
+    in a string with multiple lines
+    """
+    clean = ""
+    for line in s.splitlines():
+        substr = re.search("\$\{(.*?)\}", line)
+        if substr:
+            line = re.sub("\$\{"+substr.group(1)+"}","",line)
+        news += line+'\n'
+    return clean
+
+
 #---------------------------------------------------------------------------
-# CSV, JSON, TXT files
+# CSV, JSON, TXT files & dict
 #---------------------------------------------------------------------------
 
 
@@ -244,8 +258,38 @@ def write_dict_into_txt(d, filename, sep_char='='):
     return None
 
 
+def dlist_to_dd(dlist, dlist_key):
+    """
+    Given a list of dictionaries and one of its keys 'dlist_key'
+    generates a dictionary with main keys given by 'dlist_key'
+    """
+    if dlist_key not in dlist.keys():
+        raise ValueError("key not in dictionary")
+    dd = {}
+    for entry in dlist:
+        key = entry[d_list_key]
+        dd[key] = entry
+    return dd
+
+
+def dd_find(ddic, key, val):
+    """
+    Returns the sub-dictionary of the input dictionary containing 
+    all entries with the specified key = val
+    """
+    dsub = {}
+    for k in ddic:
+        entry = ddic[k]
+        if entry[key] == val:
+            dsub[k] = entry
+    return dsub
+
+
+#    return dict((k, dd[k]) for k in keys if k in dd)
+    
+
 #---------------------------------------------------------------------------
-# os, bash, etc 
+# os, bash, git, etc 
 #---------------------------------------------------------------------------
 
 
@@ -289,11 +333,13 @@ def runcmd(cmd, workdir, out, verbose=False):
         return sl_out, sl_err
 
 
-def git_clone(server = "core-gitlfs.tpi.uni-jena.de",
+def git_clone(path = '.',
+              server = "core-gitlfs.tpi.uni-jena.de",
               gitbase = "core_database",
-              protocol = 'https'
+              protocol = 'https',
               repo = 'core_database_index',
-              verbose=True, lfs=False):
+              lfs = False,
+              verbose = True):
     """
     Clones a git repository 
     """
@@ -307,10 +353,10 @@ def git_clone(server = "core-gitlfs.tpi.uni-jena.de",
     if lfs:
         # 'git lfs clone' is deprecated and will not be updated
         #  with new flags from 'git clone'
-        out, err = runcmd(['git','lfs', 'clone',git_repo],self.path,True)
+        out, err = runcmd(['git','lfs', 'clone',git_repo],path,True)
         #
     else:
-        out, err = runcmd(['git','clone', git_repo], self.path, True)
+        out, err = runcmd(['git','clone', git_repo],path, True)
     if verbose:
         print(out, err)
     print('done!')
@@ -318,7 +364,8 @@ def git_clone(server = "core-gitlfs.tpi.uni-jena.de",
 
 def git_pull(path = '.',
              repo = 'core_database_index',
-             verbose=True, lfs=False):
+             lfs = False,
+             verbose = True):
     """
     Pulls changes in a git repository located in a path
     """

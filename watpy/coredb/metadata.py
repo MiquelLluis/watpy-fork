@@ -1,502 +1,292 @@
-import csv
-import json
-import os
-import argparse
-
-main_keys = ['database_key', 'simulation_name', 'reference_bibkeys', 
-            'id_code', 'id_type', 'id_mass', 'id_rest_mass', 'id_mass_ratio', 
-            'id_ADM_mass', 'id_ADM_angularmomentum', 'id_gw_frequency_Hz', 
-            'id_gw_frequency_Momega22', 'id_eos', 'id_kappa2T', 'id_Lambda',
-            'id_mass_starA', 'id_rest_mass_starA', 'id_spin_starA', 
-            'id_LoveNum_kell_starA', 'id_Lambdaell_starA', 'id_mass_starB', 
-            'id_rest_mass_starB', 'id_spin_starB', 'id_LoveNum_kell_starB', 
-            'id_Lambdaell_starB', 'id_eccentricity','grid_spacing_min']
-keys = ['database_key', 'simulation_name', 'available_resolutions', 'reference_bibkeys', 
-            'id_code', 'id_type', 'id_mass', 'id_rest_mass', 'id_mass_ratio', 
-            'id_ADM_mass', 'id_ADM_angularmomentum', 'id_gw_frequency_Hz', 
-            'id_gw_frequency_Momega22', 'id_eos', 'id_kappa2T', 'id_Lambda',
-            'id_mass_starA', 'id_rest_mass_starA', 'id_spin_starA', 
-            'id_LoveNum_kell_starA', 'id_Lambdaell_starA', 'id_mass_starB', 
-            'id_rest_mass_starB', 'id_spin_starB', 'id_LoveNum_kell_starB', 
-            'id_Lambdaell_starB', 'id_eccentricity', 'evolution_code','grid_refinement_levels', 'grid_refinement_levels_moving', 'grid_refinement_levels_npoints',
-        'grid_refinement_levels_moving_npoints', 'grid_spacing_min', 'grid_symmetries', 'grid_shells',
-        'grid_shells_radial_npoints', 'grid_shells_angular_npoints', 'grid_conservative_amr', 'metric_scheme',
-        'metric_boundary_conditions', 'hydro_flux', 'hydro_reconstruction', 'hydro_atmosphere_level',
-        'hydro_atmosphere_factor', 'number_of_orbits', 'evolution_mol_scheme', 'eos_evolution_Gamma_thermal']
+from ..utils.ioutils import *
+import collections
 
 
-def get_metadata(path, mdata_file='metadata_main.txt'):
-    """
-    Reads the metadata.txt file at the specified path 
-    into a python dictionary 
-    """
-    mdata = {}
-    mdpath = os.path.join(path,mdata_file)
-    if os.path.isfile(mdpath):        
-        with open(mdpath,'r') as f:
-            lines = f.readlines()
-            for line in lines:
-                lst = line.split('=')
-                if len(lst)>1:
-                    mdata[lst[0].strip()] = lst[1].strip()
-                #
-            #
-        #
-    else:
-        print("No metadata available for this simulation!")
+# ------------------------------------------------------------------
+# CoRe metadata : fields and short description
+# ------------------------------------------------------------------
+
+
+MDKEYS = {
+    'database_key': 'A string like `BAM:0001:R01` or `THC:0013:R02` that
+    identifies the simulation by the code employed for the evolution
+    and a unique progressive number in the CoRe DB. The first part of
+    the string corresponds to the repository name, like `BAM:0001` or
+    `THC:0013`, and appears in the summary `metadata_main.txt`. The full string
+    includes the different runs (different resolutions, grid setups,
+    hydro scheme, etc.) and appears in the `metadata.txt` inside each
+    run folder',
     #
-    return mdata
-#
-
-#---------------------------------------------------------------------------#
-#                                    CSV                                    #
-#---------------------------------------------------------------------------#
-
-def read_csv_into_dict(filename):
-    """ 
-    Read a CSV file into a python dictionary
-    """
-    data = [] 
-    with open(filename) as f:
-        reader = csv.DictReader(f, delimiter=',')
-        for line in reader:
-            data.append(line)
-        #
+    'simulation_name': 'A string that identifies the simulated
+    binary. The convention used so far is
+    `<EOS>_<mass1>_<mass2>_<spin1z>_<spin2z>_<initial_frequency>_<setup_details>`
+    formatted as e.g. `2B_1.350_1.350_0.00_0.00_0.038_0.186`.
+    Similarly to the database_key, the first part of this string
+    common to all runs of a simulation appears in the summary
+    `metadata_main.txt`, While the full string appears in the
+    `metadata.txt` inside each run folder',
     #
-    return data
-#
-
-def write_dict_into_csv(filename, fieldnames, data):
-    """ 
-    Writes a python dictionary into a CSV file 
-    """
-    with open(filename, "wb") as f:
-        writer = csv.DictWriter(f, delimiter=',', fieldnames=fieldnames)
-        writer.writeheader()
-        for row in data:
-            writer.writerow(row)
-        #
+    'available_resolutions': 'This is the list of runs (different resolutions, grid setups,
+    hydro scheme, etc.) available for a given simulation, e.g. R01,
+    R02, R03, etc. Note that with "simulation" here we indicate the 
+    set of runs of a given physical setup, i.e. of the same initial
+    data and with the same physical assumptions (e.g. description of
+    matter fields).\n[This field should really be called
+    `available_runs`, to be fixed in future].'
     #
-#
-
-#---------------------------------------------------------------------------#
-#                                    JSON                                   #
-#---------------------------------------------------------------------------#
-
-def write_dict_into_json(filename, d):
-    """ 
-    Write python dictionary to JSON file 
-    """
-    with open(filename, 'w') as f:
-        json.dump(d, f)
-    return 
-#
-
-def read_json_into_dict(filename):
-    """ 
-    Read JSON file into a python dictionary 
-    """
-    print("fixme - not working") # do not know why
-    return json.load(open(filename))
-#
-
-
-#---------------------------------------------------------------------------#
-#                                    TXT                                    #
-#---------------------------------------------------------------------------#
-
-def read_txt_header(filename, comm_char='#'):
-    """ Read TXT file header lines into list """
-    h = []
-    with open(filename) as data:
-        for line in data:
-            if line[0]==comm_char:
-                h.append(line[1::].strip())
-            #
-        #
+    'reference_bibkeys': 'BibTeX code(s) from HEP-SPIRES referrring to
+    the publication of the simulation.', 
     #
-    return h
-#
-
-
-def read_txt_into_dict(filename, sep_char='=', comm_char='#'):
-    """ 
-    Read a TXT file with lines 'parameter = value', return a dict 
-    """
-    d = dict()
-    with open(filename) as data:
-        for line in data:
-            if line[0]==comm_char:
-                continue
-            #
-            if sep_char in line:
-                key,value = line.split(sep_char, 1)
-                d[key.strip()] = value.strip()
-            #
-            else:
-                pass # skip empty/bad lines
-            #
-        #
+    'id_code': 'Initial data: Code employed for generating initial data',
     #
-    return d
-#
-
-def write_dict_into_txt(d, filename, sep_char='='):
-    """ 
-    Write dict into a TXT file with lines 'parameter = value' 
-    """
-    with open(filename, 'w') as f:
-        for key, value in d.items():
-            f.write('%s = %s\n' % (key, value))
-        #
+    'id_type': 'Initial data: Assumptions employed in the initial data contruction,
+    e.g. Irrotational', 
     #
-    return None
-#
-
-#---------------------------------------------------------------------------#
-#                         GENERAL METADATA ROUTINES                         #
-#---------------------------------------------------------------------------#
-
-def ind_match (match, lis):
-    """
-    Return the index of match in list lis
-    """
-    return [index for index, value in enumerate(lis) if value == match][0]
-#
-    
-def write_ks_lines (spec_keys, s, file, format = '%-40s\t=\t %s\n'):
-    """
-    Write some lines in metadatafile_write having identical pattern
-    """
-    keys= s.keys()
-    for j in spec_keys:
-        if keys.__contains__(j):
-            file.write(format % (j, s[j]))
-        else:
-            pass
-        #
+    'id_mass': 'Initial data: Binary''s gravitational mass (solar masses)',
     #
-    return None
-#
-
-def metadatafile_write(path='./', db_key=None, sim_name=None, code=None,
-                        ref_bibk=None, ecc=False, main=False, filename="metadata.txt"):
-    """ 
-    Create metadata.txt for a given simulation
-    """
-    #keys = s.keys()
-    keys       = []
-    av_res = []
-    res = ''
-    if main:
-        first_keys = ['database_key', 'available_resolutions', 'simulation_name', 'reference_bibkeys']
-        for ddr in os.listdir(path):
-            if ddr[0]=='R' and len(ddr)==3:
-                av_res.append(ddr)
-            #
-        #
-        for r in av_res:
-            if len(res)==0:
-                res = r
-            else:
-                res = res + ', '+r
-            #
-        #
-    else :
-        first_keys = ['database_key', 'simulation_name', 'reference_bibkeys']
+    'id_rest_mass': 'Initial data: Binary''s rest-mass (solar masses)',
     #
-    keys.extend(first_keys)
-
-    id_key_binary = ['id_code', 'id_type', 'id_mass', 'id_rest_mass', 'id_mass_ratio', 'id_ADM_mass', 'id_ADM_angularmomentum',
-        'id_gw_frequency_Hz', 'id_gw_frequency_Momega22', 'id_eos', 'id_kappa2T', 'id_Lambda']
-
-    id_key_single_stars = ['id_mass_starA', 'id_rest_mass_starA',
-        'id_spin_starA', 'id_LoveNum_kell_starA', 'id_Lambdaell_starA', 'id_mass_starB', 'id_rest_mass_starB', 'id_spin_starB', 
-        'id_LoveNum_kell_starB', 'id_Lambdaell_starB'] 
-
-    if ecc:
-        id_key_binary.append('id_eccentricity_3PN')
-    else:
-        id_key_binary.append('id_eccentricity')
+    'id_mass_ratio': 'Initial data: Binary''s mass ratio', 
     #
-    keys.extend(id_key_binary)
-    keys.extend(id_key_single_stars)
-    
-    ev_key = ['evolution_code','grid_refinement_levels', 'grid_refinement_levels_moving', 'grid_refinement_levels_npoints',
-        'grid_refinement_levels_moving_npoints', 'grid_spacing_min', 'grid_symmetries', 'grid_shells',
-        'grid_shells_radial_npoints', 'grid_shells_angular_npoints', 'grid_conservative_amr', 'metric_scheme',
-        'metric_boundary_conditions', 'hydro_flux', 'hydro_reconstruction', 'hydro_atmosphere_level',
-        'hydro_atmosphere_factor', 'number_of_orbits', 'evolution_mol_scheme', 'eos_evolution_Gamma_thermal']
+    'id_ADM_mass': 'Initial data: ADM mass (solar masses)',
     #
-    keys.extend(ev_key)
-    s = initialize_metadict(keys, [db_key, sim_name, ref_bibk, code, res], main)
-    if not os.path.isfile(os.path.join(path,filename)):
-        open(os.path.join(path,filename), 'w+')
+    'id_ADM_angularmomentum': 'Initial data: ADM angular momentum
+    (c=G=Msun=1 units)',
     #
+    'id_gw_frequency_Hz': 'Initial data: initial GW frequency (Hz)', 
+    #
+    'id_gw_frequency_Momega22': 'Initial data: Mass-rescaled initial
+    GW frequency (c=G=Msun=1 units)', 
+    #
+    'id_eos': 'Initial data: EOS employed for the matter',
+    #
+    'id_kappa2T': 'Initial data: tidal coupling constant',
+    #
+    'id_Lambda': 'Initial data: reduced tidal parameters (this is
+    really $\tilde{\Lambda}$)',
+    #
+    'id_mass_starA': 'Initial data: Gravitational (TOV) mass of star A
+    (solar masses)',
+    #
+    'id_rest_mass_starA': 'Initial data: Rest-mass of star A (solar masses)',
+    #
+    'id_spin_starA': 'Initial data: components of spin vector of star A',
+    #
+    'id_LoveNum_kell_starA': 'Initial data: Gravitoelectric Love
+    numbers for star A and for ell=2,3,4',
+    #
+    'id_Lambdaell_starA': 'Initial data: tidal polarizability
+    parameters for star A and for ell=2,3,4',
+    #
+    'id_mass_starB': 'Initial data: Gravitational (TOV) mass of star B
+    (solar masses)', 
+    #
+    'id_rest_mass_starB': 'Initial data: Rest-mass of star B (solar masses)',
+    #
+    'id_spin_starB': 'Initial data: components of spin vector of star B',
+    #
+    'id_LoveNum_kell_starB': 'Initial data: Gravitoelectric Love
+    numbers for star B and for ell=2,3,4', 
+    #
+    'id_Lambdaell_starB': 'Initial data: tidal polarizability
+    parameters for star B and for ell=2,3,4',
+    #
+    'id_eccentricity': 'Initial data: measured eccentricity.',
+    #
+    'evolution_code': 'Code employed for the evolution of initial
+    data, e.g. BAM, THC, etc',
+    #
+    'grid_refinement_levels': 'Number of AMR refinement levels',
+    #
+    'grid_refinement_levels_moving': 'Number of moving AMR refinement levels',
+    #
+    'grid_refinement_levels_npoints': 'Grid points per direction
+    (approximate) in non-moving refinement levels',
+    #
+    'grid_refinement_levels_moving_npoints': 'Grid point per direction
+    (approximate) i moving refinement levels',
+    #
+    'grid_spacing_min': 'AMR minimum grid spacing (approximate)',
+    #
+    'grid_symmetries': 'Symmetries imposed to the grid',
+    #
+    'grid_shells': 'Spherical patches for wave zone/wave extraction',
+    #
+    'grid_shells_radial_npoints': 'Number of radial points in
+    spherical patches',
+    #
+    'grid_shells_angular_npoints': 'Number of angular points in
+    spherical patches',
+    #
+    'grid_conservative_amr': 'Tells if a refluxing scheme was employed
+    in the simulations',
+    #
+    'metric_scheme': 'Formulation employed for the metric field, e.g. Z4c, BSSN, etc',
+    #
+    'metric_boundary_conditions': 'Boundary conditions for the metric fields',
+    #
+    'eos_evolution_Gamma_thermal': 'EOS employed in the evolution or
+    value of the adiabatic exponent for the thermal pressure component',
+    #
+    'hydro_flux': 'Numerical flux employed in the hydrodynamics scheme',
+    #
+    'hydro_reconstruction': 'Reconstruction method employed in the hydrodynamics',
+    #
+    'hydro_atmosphere_level': 'Atmosphere value of the rest-mass
+    density (c=G=Msun=1 units)',
+    #
+    'hydro_atmosphere_factor': 'Atmosphere is set when rest-mass
+    density drops below the atmosphere level times this factor',
+    #
+    'evolution_mol_scheme': 'Time integrator used in the method of
+    line scheme',
+    #
+    'number_of_orbits': 'Number of orbits',
+}
 
-    with open(os.path.join(path,filename), 'w+') as f:
+MDKEYS = collections.OrderedDict(MDKEYS)
 
-        write_ks_lines(first_keys, s, f, '%-20s\t=\t %s\n')   
-        
-        f.write('# -------------------------------\n')
-        f.write('# Initial data (ID)\n')
-        f.write('# -------------------------------\n')
-        write_ks_lines(id_key_binary, s, f, '%-24s\t=\t %s\n')
-        
-        f.write('\n')
-        
-        write_ks_lines(id_key_single_stars, s, f, '%-24s\t=\t %s\n')
-        if not main:
-            f.write('# -------------------------------\n')
-            f.write('# Evolution \n')
-            f.write('# -------------------------------\n')
-            write_ks_lines(ev_key, s, f, '%-46s\t=\t %s\n')
-    #
-    return None
-#
 
-def metadata_write(path='./', py_dict=None, filename="metadata.txt"):
-    if not py_dict:
-        print("Creating empty metadata file in %s..." % path)
-        py_dict = {}
-        for key in keys:
-            py_dict[key] = None
-        #
-    #
-    
-    if filename=="metadata.txt":
-        print("Woking on database run...")
-        py_dict['database_key'] = path.split('/')[-2]
-        s = """database_key            = {db_key}
-simulation_name         = {sim_name}
-reference_bibkeys       = {ref_bibkey}
+# ------------------------------------------------------------------
+# Templates for CoRe medata*.txt
+# ------------------------------------------------------------------
+
+
+TXT_HEAD="""\
+database_key            = ${db_key}
+simulation_name         = ${sim_name}
+available_resolutions   = ${av_res}
+reference_bibkeys       = ${ref_bibkey}
+"""
+
+TXT_ID="""\
 # -------------------------------
 # Initial data (ID)
 # -------------------------------
-id_code                     = {id_code}
-id_type                     = {id_type}
-id_mass                     = {id_mass} 
-id_rest_mass                = {id_rest_mass}
-id_mass_ratio               = {id_mass_ratio}
-id_ADM_mass                 = {id_ADM_mass}
-id_ADM_angularmomentum      = {id_ADM_angularmomentum}
-id_gw_frequency_Hz          = {id_gw_frequency_Hz}
-id_gw_frequency_Momega22    = {id_gw_frequency_Momega22}
-id_eos                      = {id_eos}
-id_kappa2T                  = {id_kappa2T}
-id_Lambda                   = {id_Lambda}
-id_mass_starA               = {id_mass_starA}
-id_rest_mass_starA          = {id_rest_mass_starA}
-id_spin_starA               = {id_spin_starA}
-id_LoveNum_kell_starA       = {id_LoveNum_kell_starA}
-id_Lambdaell_starA          = {id_Lambdaell_starA}
-id_mass_starB               = {id_mass_starB}
-id_rest_mass_starB          = {id_rest_mass_starB}
-id_spin_starB               = {id_spin_starB}
-id_LoveNum_kell_starB       = {id_LoveNum_kell_starB}
-id_Lambdaell_starB          = {id_Lambdaell_starB}
-id_eccentricity             = {id_eccentricity}
+id_code                     = ${id_code}
+id_type                     = ${id_type}
+id_mass                     = ${id_mass} 
+id_rest_mass                = ${id_rest_mass}
+id_mass_ratio               = ${id_mass_ratio}
+id_ADM_mass                 = ${id_ADM_mass}
+id_ADM_angularmomentum      = ${id_ADM_angularmomentum}
+id_gw_frequency_Hz          = ${id_gw_frequency_Hz}
+id_gw_frequency_Momega22    = ${id_gw_frequency_Momega22}
+id_eos                      = ${id_eos}
+id_kappa2T                  = ${id_kappa2T}
+id_Lambda                   = ${id_Lambda}
+id_mass_starA               = ${id_mass_starA}
+id_rest_mass_starA          = ${id_rest_mass_starA}
+id_spin_starA               = ${id_spin_starA}
+id_LoveNum_kell_starA       = ${id_LoveNum_kell_starA}
+id_Lambdaell_starA          = ${id_Lambdaell_starA}
+id_mass_starB               = ${id_mass_starB}
+id_rest_mass_starB          = ${id_rest_mass_starB}
+id_spin_starB               = ${id_spin_starB}
+id_LoveNum_kell_starB       = ${id_LoveNum_kell_starB}
+id_Lambdaell_starB          = ${id_Lambdaell_starB}
+id_eccentricity             = ${id_eccentricity}
+"""
+ 
+TXT_EV="""\
 # -------------------------------
 # Evolution
 # -------------------------------
-evolution_code                        = {evolution_code}
-grid_refinement_levels                = {grid_refinement_levels}
-grid_refinement_levels_moving         = {grid_refinement_levels_moving}
-grid_refinement_levels_npoints        = {grid_refinement_levels_npoints}
-grid_refinement_levels_moving_npoints = {grid_refinement_levels_moving_npoints}
-grid_spacing_min                      = {grid_spacing_min}
-grid_symmetries                       = {grid_symmetries}
-grid_shells                           = {grid_shells}
-grid_shells_radial_npoints            = {grid_shells_radial_npoints}
-grid_shells_angular_npoints           = {grid_shells_angular_npoints}
-grid_conservative_amr                 = {grid_conservative_amr}
-metric_scheme                         = {metric_scheme}
-metric_boundary_conditions            = {metric_boundary_conditions}
-hydro_flux                            = {hydro_flux}
-hydro_reconstruction                  = {hydro_reconstruction}
-hydro_atmosphere_level                = {hydro_atmosphere_level}
-hydro_atmosphere_factor               = {hydro_atmosphere_factor}
-number_of_orbits                      = {number_of_orbits}
-evolution_mol_scheme                  = {evolution_mol_scheme}
-eos_evolution_Gamma_thermal           = {eos_evolution_Gamma_thermal}
-""".format(
-          db_key = py_dict['database_key'],
-          sim_name = py_dict['simulation_name'],
-          ref_bibkey = py_dict['reference_bibkeys'],
-          id_code = py_dict['id_code'],
-          id_type = py_dict['id_type'],
-          id_mass = py_dict['id_mass'],
-          id_rest_mass = py_dict['id_rest_mass'], 
-          id_mass_ratio = py_dict['id_mass_ratio'], 
-          id_ADM_mass = py_dict['id_ADM_mass'], 
-          id_ADM_angularmomentum = py_dict['id_ADM_angularmomentum'],
-          id_gw_frequency_Hz = py_dict['id_gw_frequency_Hz'], 
-          id_gw_frequency_Momega22 = py_dict['id_gw_frequency_Momega22'],
-          id_eos = py_dict['id_eos'],
-          id_kappa2T = py_dict['id_kappa2T'], 
-          id_Lambda = py_dict['id_Lambda'],
-          id_mass_starA = py_dict['id_mass_starA'], 
-          id_rest_mass_starA = py_dict['id_rest_mass_starA'],
-          id_spin_starA = py_dict['id_spin_starA'], 
-          id_LoveNum_kell_starA = py_dict['id_LoveNum_kell_starA'],
-          id_Lambdaell_starA = py_dict['id_Lambdaell_starA'],
-          id_mass_starB = py_dict['id_mass_starB'],
-          id_rest_mass_starB = py_dict['id_rest_mass_starB'], 
-          id_spin_starB = py_dict['id_spin_starB'], 
-          id_LoveNum_kell_starB = py_dict['id_LoveNum_kell_starB'], 
-          id_Lambdaell_starB = py_dict['id_Lambdaell_starB'],
-          evolution_code = py_dict['evolution_code'],
-          grid_refinement_levels = py_dict['grid_refinement_levels'],
-          grid_refinement_levels_moving = py_dict['grid_refinement_levels_moving'],
-          grid_refinement_levels_npoints = py_dict['grid_refinement_levels_npoints'],
-          grid_refinement_levels_moving_npoints = py_dict['grid_refinement_levels_moving_npoints'],
-          grid_spacing_min = py_dict['grid_spacing_min'], 
-          grid_symmetries = py_dict['grid_symmetries'], 
-          grid_shells = py_dict['grid_shells'],
-          grid_shells_radial_npoints = py_dict['grid_shells_radial_npoints'], 
-          grid_shells_angular_npoints = py_dict['grid_shells_angular_npoints'], 
-          grid_conservative_amr = py_dict['grid_conservative_amr'], 
-          metric_scheme = py_dict['metric_scheme'],
-          metric_boundary_conditions = py_dict['metric_boundary_conditions'], 
-          hydro_flux = py_dict['hydro_flux'], 
-          hydro_reconstruction = py_dict['hydro_reconstruction'], 
-          hydro_atmosphere_level = py_dict['hydro_atmosphere_level'],
-          hydro_atmosphere_factor = py_dict['hydro_atmosphere_factor'], 
-          number_of_orbits = py_dict['number_of_orbits'], 
-          evolution_mol_scheme = py_dict['evolution_mol_scheme'],
-          eos_evolution_Gamma_thermal = py_dict['eos_evolution_Gamma_thermal']
-          )
-    else:
-        print("Working on database model...")
-        py_dict['database_key'] = os.path.basename(path)
-        if py_dict['available_resolutions'] == None:
-            dir_res = []
-            for ddir in os.listdir(path):
-                if ddir[0]=='R' and len(ddir)==3:
-                    dir_res.append(ddir)
-                #
-            #
-            dir_res.sort()
-            av_res = ''
-            for r in dir_res:
-                if len(av_res)==0:
-                    av_res = r
-                else:
-                    av_res = av_res + ', '+r
-                #
-            #
-            py_dict['available_resolutions'] = av_res
-        #
-        s = """database_key            = {db_key}
-available_resolutions   = {av_res}
-simulation_name         = {sim_name}
-reference_bibkeys       = {ref_bibkey}
-# -------------------------------
-# Initial data (ID)
-# -------------------------------
-id_code                     = {id_code}
-id_type                     = {id_type}
-id_mass                     = {id_mass} 
-id_rest_mass                = {id_rest_mass}
-id_mass_ratio               = {id_mass_ratio}
-id_ADM_mass                 = {id_ADM_mass}
-id_ADM_angularmomentum      = {id_ADM_angularmomentum}
-id_gw_frequency_Hz          = {id_gw_frequency_Hz}
-id_gw_frequency_Momega22    = {id_gw_frequency_Momega22}
-id_eos                      = {id_eos}
-id_kappa2T                  = {id_kappa2T}
-id_Lambda                   = {id_Lambda}
-id_mass_starA               = {id_mass_starA}
-id_rest_mass_starA          = {id_rest_mass_starA}
-id_spin_starA               = {id_spin_starA}
-id_LoveNum_kell_starA       = {id_LoveNum_kell_starA}
-id_Lambdaell_starA          = {id_Lambdaell_starA}
-id_mass_starB               = {id_mass_starB}
-id_rest_mass_starB          = {id_rest_mass_starB}
-id_spin_starB               = {id_spin_starB}
-id_LoveNum_kell_starB       = {id_LoveNum_kell_starB}
-id_Lambdaell_starB          = {id_Lambdaell_starB}
-""".format(
-          db_key = py_dict['database_key'],
-          av_res = py_dict['available_resolutions'],
-          sim_name = py_dict['simulation_name'],
-          ref_bibkey = py_dict['reference_bibkeys'],
-          id_code = py_dict['id_code'],
-          id_type = py_dict['id_type'],
-          id_mass = py_dict['id_mass'],
-          id_rest_mass = py_dict['id_rest_mass'], 
-          id_mass_ratio = py_dict['id_mass_ratio'], 
-          id_ADM_mass = py_dict['id_ADM_mass'], 
-          id_ADM_angularmomentum = py_dict['id_ADM_angularmomentum'],
-          id_gw_frequency_Hz = py_dict['id_gw_frequency_Hz'], 
-          id_gw_frequency_Momega22 = py_dict['id_gw_frequency_Momega22'],
-          id_eos = py_dict['id_eos'],
-          id_kappa2T = py_dict['id_kappa2T'], 
-          id_Lambda = py_dict['id_Lambda'],
-          id_mass_starA = py_dict['id_mass_starA'], 
-          id_rest_mass_starA = py_dict['id_rest_mass_starA'],
-          id_spin_starA = py_dict['id_spin_starA'], 
-          id_LoveNum_kell_starA = py_dict['id_LoveNum_kell_starA'],
-          id_Lambdaell_starA = py_dict['id_Lambdaell_starA'],
-          id_mass_starB = py_dict['id_mass_starB'],
-          id_rest_mass_starB = py_dict['id_rest_mass_starB'], 
-          id_spin_starB = py_dict['id_spin_starB'], 
-          id_LoveNum_kell_starB = py_dict['id_LoveNum_kell_starB'], 
-          id_Lambdaell_starB = py_dict['id_Lambdaell_starB']
-          )
-    #
-    open(os.path.join(path,filename), "w").write(s)
-#
+evolution_code                        = ${evolution_code}
+grid_refinement_levels                = ${grid_refinement_levels}
+grid_refinement_levels_moving         = ${grid_refinement_levels_moving}
+grid_refinement_levels_npoints        = ${grid_refinement_levels_npoints}
+grid_refinement_levels_moving_npoints = ${grid_refinement_levels_moving_npoints}
+grid_spacing_min                      = ${grid_spacing_min}
+grid_symmetries                       = ${grid_symmetries}
+grid_shells                           = ${grid_shells}
+grid_shells_radial_npoints            = ${grid_shells_radial_npoints}
+grid_shells_angular_npoints           = ${grid_shells_angular_npoints}
+grid_conservative_amr                 = ${grid_conservative_amr}
+metric_scheme                         = ${metric_scheme}
+metric_boundary_conditions            = ${metric_boundary_conditions}
+hydro_flux                            = ${hydro_flux}
+hydro_reconstruction                  = ${hydro_reconstruction}
+hydro_atmosphere_level                = ${hydro_atmosphere_level}
+hydro_atmosphere_factor               = ${hydro_atmosphere_factor}
+number_of_orbits                      = ${number_of_orbits}
+evolution_mol_scheme                  = ${evolution_mol_scheme}
+eos_evolution_Gamma_thermal           = ${eos_evolution_Gamma_thermal}
+"""
+
+TXT_MAIN = TXT_HEAD + TXT_ID
+TXT = TXT_HEAD + TXT_ID + TXT_EV
 
 
+# ------------------------------------------------------------------
+# Metadata class
+# ------------------------------------------------------------------
 
 
-
-
-def initialize_metadict(keys, values, main):
+class CoRe_md():
     """
-    Initialize an empty dict apart from the 
-    initial keys.
+    Class for managing CoRe DB metdata (md)
     """
-    s = {}
-    for k in keys:
-        s[k] = None
-    #
-    s['database_key']      = values[0]
-    s['simulation_name']   = values[1]
-    s['reference_bibkeys'] = values[2]
-    s['evolution_code']    = values[3]
-    if main:
-        s['available_resolutions'] = values[4]
-    #
-    return s
-#
+    def __init__(self, path ='.', mdfile = "metadata.txt"):
+        self.path = path
+        self.md = self.init_core_md()
+        self.update_fromfile(mdfile)
 
+    def info(self):
+        """
+        Print info on CoRe metadata
+        """
+        for key, val in MDKEYS.items():
+            print('{} : {}.'.format(key,val))
 
-def metadatafile_add_item(filename, s, key,val):
-    """ 
-    Add/modify simulation item in metadata file 
-    """
-    s[key]=val # change entry in s
-    return metadatafile_write(s, filename)
-#
+    def init_core_md(self):
+        """
+        Initialize CoRe md with all the keys
+        """
+        return dict.fromkeys(MDKEYS.keys())
+        
+    def read_fromfile(self,fname):
+        """
+        Read md from a file 
+        """
+        md = {}
+        if os.path.isfile(fname):        
+            with open(fname,'r') as f:
+                lines = f.readlines()
+                for line in lines:
+                    kv = line.split('=')
+                    if len(lst)>1:
+                        md[kv[0].strip()] = kv[1].strip()
+        else:
+            print("File {} not found. Metadata is empty".format(fname))
+        return md
 
-def metadatafile_remove_item(filename, s, key):
-    """ 
-    Remove item in metadata file 
-    """
-    del s["key"] #  Remove entry in s
-    return metadatafile_write(s, filename)
-#
+    def update_fromfile(self,fname):
+        """
+        Update md from a file
+        """
+        self.md.update(self.read_fromfile(fname))
 
-def metadatafile_dump_from_simlist(sl, BASE='./'):
-    """ 
-    Write metadatafiles from simulation list 
-    """ 
-    for s in sl:
-        fname = BASE+s['database_key']+"/metadata.txt"
-        print('-> writing:',fname)
-        metadatafile_write(s,fname)
-    #
-    return None
-#
+    def update_fromdict(self,d):
+        """
+        Update md from a dict
+        """
+        self.md.update(d)
+
+    def add(self,key,val=None):
+        self.md[key] = val
+        
+    def del_key(self,key):
+        del self.md[key]
+
+    def write(self, path = '.',
+              fname = 'metadata.txt',
+              templ = TXT):
+        """
+        Write md to file
+        """
+        t = Template(templ)
+        s = t.safe_substitute(**self.md)
+        s = remove_template_missed_keys(s)
+        open(os.path.join(path,fname), "w").write(s)
+

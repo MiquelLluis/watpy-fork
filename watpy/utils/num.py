@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 from numpy import inf
 
@@ -16,7 +17,7 @@ def linterp(ti,t,y):
 
     yi   = np.interp(ti, t[idx_min-1:idx_max+1], y[idx_min-1:idx_max+1])
     return yi
-#
+
 
 def findmax(x):
     """
@@ -25,12 +26,14 @@ def findmax(x):
     idx = np.argmax(x)
     return x[idx], idx
 
+
 def findmax_abs(x):
     """
     Finds grid index location of absolute discrete maximum
     """
     idx = np.argmax(np.fabs(x))
     return x[idx], idx
+
 
 def isarrayuniform(x, tol=1e-21):
     """ 
@@ -39,12 +42,14 @@ def isarrayuniform(x, tol=1e-21):
     xu = linspace(x[0],x[::],len(x))
     return np.all(np.abs(x-xu)<=np.fabs(xu*tol))
 
+
 # from scivis
 class Struct(object):
     """ 
     Mimic Matlab structure
     """
     pass
+
 
 # from scivis
 def makelist(stuff):
@@ -55,6 +60,7 @@ def makelist(stuff):
         return list(stuff)
     except:
         return [stuff]
+
 
 # from scivis
 def bisection(func, domain, eps=sys.float_info.epsilon, nmax=52):
@@ -99,6 +105,7 @@ def bisection(func, domain, eps=sys.float_info.epsilon, nmax=52):
 
     return xm
 
+
 # from scivis
 def diff(ff):
     """
@@ -111,6 +118,7 @@ def diff(ff):
     out[0] = -1.5*ff[0] + 2*ff[1] - 0.5*ff[2]
     out[-1] = 1.5*ff[-1] - 2*ff[-2] + 0.5*ff[-3]
     return out
+
 
 # from scivis
 def diff1(xp, yp, pad=True):
@@ -128,8 +136,8 @@ def diff1(xp, yp, pad=True):
     if pad==True:
         dyp = np.insert(dyp, 0, dyp[0])
         dyp = np.append(dyp, dyp[-1])
-    #
     return dyp
+
 
 # from scivis
 def diff2(xp, yp, pad=False):
@@ -147,8 +155,8 @@ def diff2(xp, yp, pad=False):
     if pad==True:
         ddyp = np.insert(ddyp, 0, ddyp[0])
         ddyp = np.append(ddyp, ddyp[-1])
-    #
     return ddyp
+
 
 def diffo(t,f, o=2):
     """ 
@@ -198,6 +206,7 @@ def diffo(t,f, o=2):
         wrn.warn("order not implemented, return empty arrays")
     return d1f, d2f
 
+
 # from scivis
 def integrate(ff):
     """
@@ -208,6 +217,7 @@ def integrate(ff):
     out[0] = 0.0
     out[1:] = np.cumsum(0.5*(ff[:-1] + ff[1:]))
     return out
+
 
 # from scivis
 def maskdata(data, stencil):
@@ -228,6 +238,7 @@ def maskdata(data, stencil):
     mask[sl] = np.logical_not(mask[sl])
     return np.ma.masked_array(data, mask=mask)
 
+
 # from scivis
 def subsample(data, stencil):
     """
@@ -242,6 +253,7 @@ def subsample(data, stencil):
         sl.append(slice(0, data.shape[d], stencil[d]))
     sl = tuple(sl)
     return data[sl]
+
 
 # from scivis
 ## {{ http://stackoverflow.com/questions/8560440/removing-duplicate-columns-and-rows-from-a-numpy-2d-array
@@ -258,6 +270,7 @@ def sorted_array(array):
     cond = np.append(cond, True)
     return array[idx][cond]
 ## end of http://stackoverflow.com/questions/8560440/removing-duplicate-columns-and-rows-from-a-numpy-2d-array }}
+
 
 # from scivis
 def unmask(array):
