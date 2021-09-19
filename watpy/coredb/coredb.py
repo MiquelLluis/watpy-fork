@@ -1,6 +1,7 @@
 from ..utils.ioutils import *
 from ..utils.coreh5 import CoRe_h5
 from .metadata import CoRe_md
+from ..utils.viz import mplot
 
 
 # ------------------------------------------------------------------
@@ -58,13 +59,11 @@ class CoRe_sim():
         self.code   = self.dbkey.split(':')[0]
         self.key    = self.dbkey.split(':')[1]
 
-        self.md = CoRe_md(path = self.path, mdfile = "metadata_main.txt")
-        if not os.path.isfile(os.path.join(self.path, "metadata_main.txt")):
-            print("No 'metadata_main.txt' found")
+        self.md = CoRe_md(path = self.path, md = "metadata_main.txt")
 
         self.run = {}
         self.run = self.update_runs()
-        print("Available runs: {}".format(self.run.keys()))
+        #print("Available runs: {}".format(self.run.keys()))
 
     def type(self):
         """
@@ -83,11 +82,13 @@ class CoRe_sim():
             print('Found no runs ''R??'' folders in {}'.format(self.path))
 
     def add_run(self, path, overwrite = 0,
-                dfile ='data.h5', mfile = 'metadata.txt'):
+                dfile ='data.h5', md = 'metadata.txt'):
         """
         Add h5 and meta data in 'path' to this simulation.
         The run number is incremented. Overwriting an existing run is
         possible by explicitely give the run number to overwrite.
+        The 'databse_key' and 'available_resolutions' in the metadta
+        are corrected.
         """
         r = sorted(self.run.keys())
         n = len(r)
@@ -97,12 +98,26 @@ class CoRe_sim():
         else:
             n += 1
         r.append('R{:02d}'.format(n))
-        dpath = '{}/{}'.format(self.path,r[-1]) 
+        dpath = '{}/{}'.format(self.path,r[-1]) # e.g. BAM_0001/R01
+        
+        # Dump the data
+        if not os.path.isfile(os.path.join(path,dfile)):
+            raise ValueError('File {}/{} not found'.format(path,dfile))
         os.makedirs(dpath, exist_ok=True)
         shutil.copy('{}/{}'.format(path,dfile), '{}/{}'.format(dpath,'data.h5'))
-        shutil.copy('{}/{}'.format(path,mfile), '{}/{}'.format(dpath,'metadata.txt'))
-        self.run[r[-1]] = CoRe_run(dpath)
 
+        # Dump the correct metadata
+        md = CoRe_md(path = path, md = md)
+        md['database_key'] = self.dbkey+':'+r[-1]
+        md.write(path = dpath)
+
+        # Update the run 
+        self.run[r[-1]] = CoRe_run(dpath)
+        
+        # Need to update also the metadata_main.tex
+        self.md.data['available_resolutions'] += ', '+r[-1]
+        self.write_metadata()
+        
     def del_run(self,r):
         """
         Delete a run object
@@ -113,16 +128,17 @@ class CoRe_sim():
         else:
             raise ValueError("run {} does not exists".format(r))
     
-    def write_metadata(self):
+    def write_metadata(self, also_runs_md=False):
         """
         Helper for writing simulation's 'metadata_main.txt' and
-        'metadata.txt' 
+        optionally the 'metadata.txt' 
         """
         self.md.write(path = self.path,
                       fname = 'metadata_main.txt',
                       templ = TXT_MAIN)
-        for r in self.run:
-            r.md.write_metadata()
+        if also_runs_md:
+            for r in self.run:
+                r.md.write_metadata()
 
 
 class CoRe_idx():
@@ -147,7 +163,7 @@ class CoRe_idx():
         if 'data' in dl.keys(): dl = dl["data"]
         index = []
         for d in dl:
-            md = CoRe_md(path = self.path, mdfile = None) # init to None
+            md = CoRe_md(path = self.path, md = None) # init to None
             index.append(md.update_fromdict(d['data']))
         return index
 
@@ -192,21 +208,18 @@ class CoRe_idx():
         dictionary. 
         """
         newkey = self.dbkey_new(self,code)
-        newmd = CoRe_md(path = self.path, mdfile = md)
-        if isinstance(md, dict):
-            newmd.update_fromdict(md)
+        newmd = CoRe_md(path = self.path, md = md)
         newmd['database_key'] = newkey
         newmd['simulation_name'] = name
         self.index.append(md)
         self.dbkeys = get_val('database_key') # make sure this up-to-date
         return newmd
         
-    def show(self, key):
+    def show(self, key, to_float = to_float, to_file = to_file):
         """
         Show histogram of metadata available in the index
         """
-        #TODO : this is a list of metadata
-        #       need a viz routine for lists of md
+        return mplot(self.index, key, to_float = to_float, to_file = to_file)
 
         
 class CoRe_db():
@@ -347,9 +360,13 @@ class CoRe_db():
         self.sim[dbkey] = CoRe_sim(os.path.join(self.path,dbkey))
         print('Added {}. Now you can add runs!'.format(dbkey))
         
-    def show(self, key):
+    def show(self, key, to_float = to_float, to_file = to_file):
         """
         Show histogram of metadata available in the DB
         """
-        #TODO : this is a list of metadata
-        #       need a viz routine for lists of md
+        mdlist = []
+        for s in self.sim:
+            for r in s.run:
+                mdlist.append(r.md.data)
+        return mplot(mdlist, key, to_float = to_float, to_file = to_file)
+

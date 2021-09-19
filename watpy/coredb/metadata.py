@@ -153,10 +153,13 @@ MDKEYS = collections.OrderedDict(MDKEYS)
 
 
 TXT_HEAD="""\
-database_key            = ${db_key}
-simulation_name         = ${sim_name}
-available_resolutions   = ${av_res}
-reference_bibkeys       = ${ref_bibkey}
+database_key            = ${database_key}
+simulation_name         = ${simulation_name}
+reference_bibkeys       = ${reference_bibkeys}
+"""
+
+TXT_SUBHEAD1="""\
+available_resolutions   = ${available_resolutions}
 """
 
 TXT_ID="""\
@@ -214,7 +217,7 @@ evolution_mol_scheme                  = ${evolution_mol_scheme}
 eos_evolution_Gamma_thermal           = ${eos_evolution_Gamma_thermal}
 """
 
-TXT_MAIN = TXT_HEAD + TXT_ID
+TXT_MAIN = TXT_HEAD + TXT_SUBHEAD1 + TXT_ID
 TXT = TXT_HEAD + TXT_ID + TXT_EV
 
 
@@ -227,12 +230,16 @@ class CoRe_md():
     """
     Class for managing CoRe DB metdata (md)
     """
-    def __init__(self, path ='.', mdfile = "metadata.txt"):
+    def __init__(self, path ='.', md = "metadata.txt"):
         self.path = path
         self.data = self.init_core_md()
-        if mdfile:
-            self.update_fromfile(mdfile)
-
+        if os.path.isfile(os.path.join(path,md)):
+            self.update_fromfile(md)
+        elif isinstance(md, dict):
+            self.update_fromdict(md)
+        else:
+            print("{} is neither a file nor a dict. Metadata is empty".format(md))
+                
     def info(self):
         """
         Print info on CoRe metadata
@@ -274,7 +281,7 @@ class CoRe_md():
         """
         self.data.update(dat)
 
-    def add(self,key,val=None):
+    def add(self,key,val = None):
         self.data[key] = val
         
     def del_key(self,key):
