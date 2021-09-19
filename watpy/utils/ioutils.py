@@ -1,6 +1,7 @@
 import sys, os, re, datetime
 import warnings as wrn
 from subprocess import Popen, PIPE
+import shutil
 
 import numpy as np
 from numpy import inf

@@ -72,7 +72,7 @@ class CoRe_h5():
         if self.dfile is None:
             print("No .h5 file found!")
 
-    def create(self, path=None):
+    def create(self, path = None):
         """
         Create HDF5 archive using .txt CoRe files under 'path'. 
         If path is not specified, search the .txt files under self.path

@@ -229,8 +229,9 @@ class CoRe_md():
     """
     def __init__(self, path ='.', mdfile = "metadata.txt"):
         self.path = path
-        self.md = self.init_core_md()
-        self.update_fromfile(mdfile)
+        self.data = self.init_core_md()
+        if mdfile:
+            self.update_fromfile(mdfile)
 
     def info(self):
         """
@@ -249,36 +250,39 @@ class CoRe_md():
         """
         Read md from a file 
         """
-        md = {}
+        dat = {}
         if os.path.isfile(fname):        
             with open(fname,'r') as f:
                 lines = f.readlines()
                 for line in lines:
                     kv = line.split('=')
                     if len(lst)>1:
-                        md[kv[0].strip()] = kv[1].strip()
+                        dat[kv[0].strip()] = kv[1].strip()
         else:
             print("File {} not found. Metadata is empty".format(fname))
-        return md
+        return dat
 
     def update_fromfile(self,fname):
         """
         Update md from a file
         """
-        self.md.update(self.read_fromfile(fname))
+        self.data.update(self.read_fromfile(fname))
 
-    def update_fromdict(self,d):
+    def update_fromdict(self,dat):
         """
         Update md from a dict
         """
-        self.md.update(d)
+        self.data.update(dat)
 
     def add(self,key,val=None):
-        self.md[key] = val
+        self.data[key] = val
         
     def del_key(self,key):
-        del self.md[key]
+        del self.data[key]
 
+    def remove_None_vals(self):
+        return {k: v for k, v in self.data.items() if v is not None}
+        
     def write(self, path = '.',
               fname = 'metadata.txt',
               templ = TXT):
@@ -286,7 +290,7 @@ class CoRe_md():
         Write md to file
         """
         t = Template(templ)
-        s = t.safe_substitute(**self.md)
+        s = t.safe_substitute(**self.data)
         s = remove_template_missed_keys(s)
         open(os.path.join(path,fname), "w").write(s)
 
