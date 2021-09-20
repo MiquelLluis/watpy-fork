@@ -55,6 +55,6 @@ def mplot(mdlist, key, to_float=False, to_file=None):
                 ticks = range(len(counts))
                 ax.bar(ticks,counts, align='center')
                 ax.set_xticks(ticks)
-                ax.set_xticklabels(labels)
+                ax.set_xticklabels(labels,rotation=90, ha='center')
         if to_file: plt.savefig(to_file)
         return fig, ax

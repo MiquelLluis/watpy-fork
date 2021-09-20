@@ -47,12 +47,12 @@ class CoRe_h5():
                 var,l,m,r,c = vlmr
                 
                 if var == 'EJ':
-                    group = 'energies'
+                    group = 'energy'
                     if group not in fn.keys():
                         fn.create_group(group)
                     if f not in fn[group].keys():
                         data = np.loadtxt(os.path.join(path,f))
-                        fn['energies'].create_dataset(name=f, data=data)
+                        fn['energy'].create_dataset(name=f, data=data)
                 
                 elif var == 'psi4':
                     group = 'rpsi4_{}{}'.format(l,m)
@@ -109,36 +109,36 @@ class CoRe_h5():
         Input:
         --------
         group   : e.g. 'rh_22' for the 22-strain mode, 'rpsi4_22' for the Weyl
-                  scalar, 'energies' for the energy curves etc
+                  scalar, 'energy' for the energy curves etc
         det     : Extraction radius
         --------
         Output:
         --------
         dataset as numpy array
         """
-        with h5py.File(os.path.join(self.path,self.dfile), 'r') as fn:
-            if group not in fn.keys():
-                raise ValueError("Group {} not available".format(group))
-            rad = self.dset_radii(fn,group=group, det=det)
-            dset = None
-            if group.startswith('rh_'):
-                l,m = self.lm_from_group(group)
-                dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))] 
-            elif group.startswith('rpsi4_'):
-                l,m = self.lm_from_group(group)
-                dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))]
-            elif group.startswith('EJ_'):
-                dset = fn[group]['EJ__r{:05d}.txt'.format(int(rad))]
-            else:
-                raise ValueError("Unknown group {}".format(group))
-        return dset
+        dset = None
+        fn = h5py.File(os.path.join(self.path,self.dfile), 'r')
+        if group not in fn.keys():
+            raise ValueError("Group {} not available".format(group))
+        rad = self.dset_radii(fn,group=group, det=det)
+        if group.startswith('rh_'):
+            l,m = self.lm_from_group(group)
+            dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))] 
+        elif group.startswith('rpsi4_'):
+            l,m = self.lm_from_group(group)
+            dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))]
+        elif group.startswith('EJ_'):
+            dset = fn[group]['EJ__r{:05d}.txt'.format(int(rad))]
+        else:
+            raise ValueError("Unknown group {}".format(group))
+        return np.array(dset)
 
     def write_strain_to_txt(self, lm=[(2,2)]):
         """
         Extract r*h_{22} from the .h5 archive into separate .txt
         files, one per saved radius. 
         """
-        mass = float(self.mdata['id_mass'])
+        mass = float(self.mdata.data['id_mass'])
         with h5py.File(os.path.join(self.path,self.dfile), 'r') as fn:
             for l,m in lm:
                 group = 'rh_{}{}'.format(l,m)
@@ -147,7 +147,7 @@ class CoRe_h5():
                     rad  = float(f[-8:-4])
                     headstr  = "r=%e\nM=%e\n " % (rad, mass)
                     headstr += "u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8"
-                    dset = self.data[group][f]
+                    dset = fn[group][f]
                     data = np.c_[dset[:,0],dset[:,1],dset[:,2],
                                  dset[:,3],dset[:,4],dset[:,5],
                                  dset[:,6],dset[:,7],dset[:,8]]
@@ -159,7 +159,7 @@ class CoRe_h5():
         Extract r*Psi4_{22} from the .h5 archive into separate .txt
         files, one per saved radius. 
         """
-        mass = float(self.mdata['id_mass'])
+        mass = float(self.mdata.data['id_mass'])
         with h5py.File(os.path.join(self.path,self.dfile), 'r') as fn:
             for l,m in lm:
                 group = 'rh_{}{}'.format(l,m)
@@ -184,8 +184,8 @@ class CoRe_h5():
         Extract energetics from the .h5 archive into separate .txt
         files, one per saved radius. 
         """
-        mass = float(self.mdata['id_mass'])
-        group = 'energies'
+        mass = float(self.mdata.data['id_mass'])
+        group = 'energy'
         with h5py.File(os.path.join(self.path,self.dfile), 'r') as fn:
             if group not in fn.keys():
                 print("No group {}".format(group))

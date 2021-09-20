@@ -194,7 +194,7 @@ class CoRe_md():
         self.data = self.init_core_md()
         if isinstance(md, str):
             if os.path.isfile(os.path.join(path,md)):
-                self.update_fromfile(md)
+                self.update_fromfile(os.path.join(path,md))
             else:
                 print('File {} not found'.format(md))
         elif isinstance(md, dict):
@@ -225,7 +225,7 @@ class CoRe_md():
                 lines = f.readlines()
                 for line in lines:
                     kv = line.split('=')
-                    if len(lst)>1:
+                    if len(kv)>1:
                         dat[kv[0].strip()] = kv[1].strip()
         else:
             print("File {} not found. Metadata is empty".format(fname))

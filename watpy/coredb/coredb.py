@@ -41,10 +41,11 @@ class CoRe_run():
         waveform data from the HDF5 archive 
         Note: these .txt files should NOT be pushed to the git DB.
         """
-        txt_files = [file for file in self.path if file.endswith(".txt")]
-        txt_files.remove('metadata.txt')
-        for file in txt_files:
-            os.remove(os.path.join(self.path, file))
+        txt_files = [f for f in os.listdir(self.path) if f.endswith(".txt")]
+        if 'metadata.txt' in txt_files: txt_files.remove('metadata.txt')
+        for f in txt_files:
+            os.remove(os.path.join(self.path, f))
+        print("Removed {} files".format(len(txt_files)))
 
 
 class CoRe_sim():
@@ -62,9 +63,8 @@ class CoRe_sim():
         self.md = CoRe_md(path = self.path, md = "metadata_main.txt")
 
         self.run = {}
-        self.run = self.update_runs()
-        #print("Available runs: {}".format(self.run.keys()))
-
+        self.update_runs()
+        
     def type(self):
         """
         Returns the class type
@@ -78,8 +78,9 @@ class CoRe_sim():
         for r in os.listdir(self.path):
             if r[0]=='R' and len(r)==3:
                 self.run[r] = CoRe_run(os.path.join(self.path, r))
+                print(' Found {}'.format(r))
         if not self.run:
-            print('Found no runs ''R??'' folders in {}'.format(self.path))
+            print(' Found no runs ''R??'' folders in {}'.format(self.path))
 
     def add_run(self, path, overwrite = 0,
                 dfile ='data.h5', md = 'metadata.txt'):
@@ -264,7 +265,8 @@ class CoRe_db():
         self.idb = CoRe_idx(db_path)
 
         # Simulations
-        self.sim = self.update_simulations()
+        self.sim = {}
+        self.update_simulations()
         if not self.sim:
             print('Found no simulation folders in {}'.format(self.path))
 
@@ -312,7 +314,10 @@ class CoRe_db():
                 self.pull(repo = repo, lfs=lfs, verbose=verbose)
             else:
                 self.clone(repo = repo, protocol = prot, lfs=lfs, verbose=verbose)
-
+            
+        # Now we have the data, update!
+        self.update_simulations()
+                
     def update_simulations(self):
         """
         Update the CoRe_sim() dict with all the folders in the DB 
@@ -320,8 +325,10 @@ class CoRe_db():
         before updating a simulation here! 
         """
         for k in os.listdir(self.path):
-            if k in self.idb.dbkeys:
-                self.sim[k] = CoRe_sim(os.path.join(self.path,k))
+            dbk = k.replace('_',':')
+            if dbk in self.idb.dbkeys:
+                self.sim[dbk] = CoRe_sim(os.path.join(self.path,k))
+                print('Found {}'.format(dbk))
             else:
                 print('skip {}, not a DB key'.format(k))
 
@@ -329,10 +336,10 @@ class CoRe_db():
         """
         Update the CoRe_sim() dict with all the DB keys in 'dbkeys'
         """
-        for k in self.idb.dbkeys:
-            path = os.path.join(self.path,k)
+        for dbk in self.idb.dbkeys:
+            path = os.path.join(self.path,dbk.replace(':','_'))
             if os.path.isdir(path):
-                self.sim[k] = CoRe_sim(path)
+                self.sim[dbk] = CoRe_sim(path)
             else:
                 print('Data folder {} not found'.format(path))
         if not self.sim:
@@ -366,8 +373,9 @@ class CoRe_db():
         Show histogram of metadata available in the DB
         """
         mdlist = []
-        for s in self.sim:
-            for r in s.run:
-                mdlist.append(r.md.data)
+        for k in self.sim.keys():
+            runs = self.sim[k].run
+            for r in runs.keys():
+                mdlist.append(runs[r].md)
         return mplot(mdlist, key, to_float = to_float, to_file = to_file)
 
