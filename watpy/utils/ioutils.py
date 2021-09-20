@@ -2,7 +2,7 @@ import sys, os, re, datetime
 import warnings as wrn
 from subprocess import Popen, PIPE
 import shutil
-
+import json, csv
 import numpy as np
 from numpy import inf
 
@@ -343,14 +343,17 @@ def git_clone(path = '.',
               verbose = True):
     """
     Clones a git repository 
+
+    git@core-gitlfs.tpi.uni-jena.de:core_database/core_database_index.git
+    https://core-gitlfs.tpi.uni-jena.de/core_database/core_database_index.git
     """
-    pre = {'ssh': 'git@', 'https':'https://'}
-    sep = {'ssh': ':'   , 'https':'/'}
+    pre = {'ssh': 'git@', 'https': 'https://'}
+    sep = {'ssh': ':'   , 'https': '/'}
     if protocol not in pre.keys():
         raise NameError("Protocol not supported!")
-    git_repo = '{}{}{}{}{}.git'.format(pre[protocol],server,
+    git_repo = '{}{}{}{}/{}.git'.format(pre[protocol],server,
                                        sep[protocol],gitbase,repo)
-    print('git-clone {} ...'.format(dbdir))
+    print('git-clone {} ...'.format(git_repo))
     if lfs:
         # 'git lfs clone' is deprecated and will not be updated
         #  with new flags from 'git clone'

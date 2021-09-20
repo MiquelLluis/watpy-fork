@@ -192,8 +192,11 @@ class CoRe_md():
     def __init__(self, path ='.', md = "metadata.txt"):
         self.path = path
         self.data = self.init_core_md()
-        if os.path.isfile(os.path.join(path,md)):
-            self.update_fromfile(md)
+        if isinstance(md, str):
+            if os.path.isfile(os.path.join(path,md)):
+                self.update_fromfile(md)
+            else:
+                print('File {} not found'.format(md))
         elif isinstance(md, dict):
             self.update_fromdict(md)
         else:

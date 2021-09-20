@@ -150,7 +150,7 @@ class CoRe_idx():
     def __init__(self, db_path = '.', ifile='json/DB_NR.json'):
         self.path = '{}/{}'.format(db_path,'core_database_index')
         self.index = self.read(path = self.path, ifile = ifile)        
-        self.dbkeys = get_val('database_key')
+        self.dbkeys = self.get_val('database_key')
         self.N = len(self.index)
         
     def read(self, path = None, ifile = None):
@@ -163,8 +163,7 @@ class CoRe_idx():
         if 'data' in dl.keys(): dl = dl["data"]
         index = []
         for d in dl:
-            md = CoRe_md(path = self.path, md = None) # init to None
-            index.append(md.update_fromdict(d['data']))
+            index.append(CoRe_md(path = self.path, md = d))
         return index
 
     def get_val(self, key):
@@ -173,7 +172,7 @@ class CoRe_idx():
         """
         dbk = []
         for i in self.index:
-            dbk.append(i[key])
+            dbk.append(i.data[key])
         return dbk
     
     def to_json(self, fname, path = None, ifile = None):
@@ -262,11 +261,14 @@ class CoRe_db():
             print("Index found, updating...\n")
             self.pull(lfs = lfs, verbose = verbose)
 
-        self.idb = CoRe_idx()
+        self.idb = CoRe_idx(db_path)
 
         # Simulations
         self.sim = self.update_simulations()
-      
+        if not self.sim:
+            print('Found no simulation folders in {}'.format(self.path))
+
+        
     def type(self):
         """
         Returns the class type
@@ -321,9 +323,7 @@ class CoRe_db():
             if k in self.idb.dbkeys:
                 self.sim[k] = CoRe_sim(os.path.join(self.path,k))
             else:
-                print('skip {}, not a DB keys'.format(k))
-        if not self.sim:
-            print('Found no simulation folders in {}'.format(self.path))
+                print('skip {}, not a DB key'.format(k))
 
     def update_simulations_from_dbkeys(self):
         """
