@@ -21,7 +21,7 @@ class CoRe_run():
     def __init__(self, path):
         self.path = path
         self.md = CoRe_md(path = self.path)
-        self.data = CoRe_h5(self.path, self.md., os.path.join(self.path,'data.h5'))
+        self.data = CoRe_h5(self.path, self.md, 'data.h5')
 
     def type(self):
         """
@@ -330,7 +330,7 @@ class CoRe_db():
         Update the CoRe_sim() dict with all the DB keys in 'dbkeys'
         """
         for k in self.idb.dbkeys:
-            path = os.path.join(self.path),k)
+            path = os.path.join(self.path,k)
             if os.path.isdir(path):
                 self.sim[k] = CoRe_sim(path)
             else:
