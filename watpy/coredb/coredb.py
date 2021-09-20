@@ -215,11 +215,11 @@ class CoRe_idx():
         self.dbkeys = get_val('database_key') # make sure this up-to-date
         return newmd
         
-    def show(self, key, to_float = to_float, to_file = to_file):
+    def show(self, key, to_float, to_file = None):
         """
         Show histogram of metadata available in the index
         """
-        return mplot(self.index, key, to_float = to_float, to_file = to_file)
+        return mplot(self.index, key, to_float, to_file = to_file)
 
         
 class CoRe_db():
