@@ -46,14 +46,15 @@ def mplot(mdlist, key, to_float=False, to_file=None):
         """
         fig, ax = plt.subplots(1,1)
         if to_float:
-                val = np.array([float(m[key]) for m in mdlist])
+                val = np.array([float(m.data[key]) for m in mdlist])
                 ax.hist(val)
                 ax.set_xlabel(key)
         else:
-                val = [m[key] for m in mdlist]
+                val = [m.data[key] for m in mdlist]
                 labels, counts = np.unique(val,return_counts=True)
                 ticks = range(len(counts))
                 ax.bar(ticks,counts, align='center')
-	        #ax.set_xticks(ticks, labels, rotation='vertical')
+                ax.set_xticks(ticks)
+                ax.set_xticklabels(labels)
         if to_file: plt.savefig(to_file)
         return fig, ax

@@ -1,7 +1,7 @@
 from ..utils.ioutils import *
 from ..utils.coreh5 import CoRe_h5
 from .metadata import CoRe_md
-from ..utils.viz import mplot
+from ..utils.viz import wplot, mplot
 
 
 # ------------------------------------------------------------------
@@ -293,8 +293,8 @@ class CoRe_db():
                         repo = repo,
                         lfs = lfs, verbose = verbose)
     
-    def sync_db(self, path = None, dbkeys = None,
-                prot = 'https', lfs = False, verbose = True):
+    def sync(self, path = None, dbkeys = None,
+             prot = 'https', lfs = False, verbose = True):
         """
         Syncronizes the CoRe DB repos specified in the list of database keys 'dbkeys'
          - If the repo is present, then it is updated (pull)with the git repository
