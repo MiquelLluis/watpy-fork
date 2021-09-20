@@ -359,7 +359,8 @@ class CoRe_db():
 
         self.sim[dbkey] = CoRe_sim(os.path.join(self.path,dbkey))
         print('Added {}. Now you can add runs!'.format(dbkey))
-        
+        return dbkey
+    
     def show(self, key, to_float = to_float, to_file = to_file):
         """
         Show histogram of metadata available in the DB
