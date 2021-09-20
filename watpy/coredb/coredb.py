@@ -361,7 +361,7 @@ class CoRe_db():
         print('Added {}. Now you can add runs!'.format(dbkey))
         return dbkey
     
-    def show(self, key, to_float = to_float, to_file = to_file):
+    def show(self, key, to_float, to_file = None):
         """
         Show histogram of metadata available in the DB
         """

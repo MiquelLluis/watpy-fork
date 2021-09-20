@@ -38,11 +38,11 @@ def wplot(t,h, omega=None, to_file=None):
                 ax.legend()
         if to_file: plt.savefig(to_file)                
         return fig, ax
-
+        
 
 def mplot(mdlist, key, to_float=False, to_file=None):
         """
-	Attempt plot of metadata list, given a key
+        Attempt plot of metadata list, given a key
         """
         fig, ax = plt.subplots(1,1)
         if to_float:
@@ -54,6 +54,6 @@ def mplot(mdlist, key, to_float=False, to_file=None):
                 labels, counts = np.unique(val,return_counts=True)
                 ticks = range(len(counts))
                 ax.bar(ticks,counts, align='center')
-	        ax.set_xticks(ticks, labels, rotation='vertical')
+	        #ax.set_xticks(ticks, labels, rotation='vertical')
         if to_file: plt.savefig(to_file)
         return fig, ax
