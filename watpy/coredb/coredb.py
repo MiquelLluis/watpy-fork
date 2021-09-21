@@ -2,6 +2,7 @@ from ..utils.ioutils import *
 from ..utils.coreh5 import CoRe_h5
 from .metadata import CoRe_md
 from ..utils.viz import wplot, mplot
+import TXT_MAIN from .metadata
 
 
 # ------------------------------------------------------------------
@@ -191,7 +192,7 @@ class CoRe_idx():
         """
         Generate a new DB key
         """
-        self.dbkeys = get_val('database_key') # make sure this up-to-date
+        self.dbkeys = self.get_val('database_key') # make sure this up-to-date
         code_list = [x.split(':')[0] for x in self.dbkeys]
         n = code_list.count(code)
         if n == 0:
@@ -207,12 +208,12 @@ class CoRe_idx():
         Optional metadata can be passed either from a file or a
         dictionary. 
         """
-        newkey = self.dbkey_new(self,code)
+        newkey = self.dbkey_new(code)
         newmd = CoRe_md(path = self.path, md = md)
         newmd['database_key'] = newkey
         newmd['simulation_name'] = name
         self.index.append(md)
-        self.dbkeys = get_val('database_key') # make sure this up-to-date
+        self.dbkeys = self.get_val('database_key') # make sure this up-to-date
         return newmd
         
     def show(self, key, to_float, to_file = None):
