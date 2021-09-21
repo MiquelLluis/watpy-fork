@@ -190,18 +190,18 @@ class CoRe_md():
     """
     Class for managing CoRe DB metdata (md)
     """
-    def __init__(self, path ='.', md = "metadata.txt"):
+    def __init__(self, path ='.', metadata = "metadata.txt"):
         self.path = path
         self.data = self.init_core_md()
-        if isinstance(md, str):
-            if os.path.isfile(os.path.join(path,md)):
-                self.update_fromfile(os.path.join(path,md))
+        if isinstance(metadata, str):
+            if os.path.isfile(os.path.join(path,metadata)):
+                self.update_fromfile(os.path.join(path,metadata))
             else:
-                print('File {} not found'.format(md))
-        elif isinstance(md, dict):
-            self.update_fromdict(md)
+                print('File {} not found'.format(metadata))
+        elif isinstance(metadata, dict):
+            self.update_fromdict(metadata)
         else:
-            print("{} is neither a file nor a dict. Metadata is empty".format(md))
+            print("{} is neither a file nor a dict. Metadata is empty".format(metadata))
                 
     def info(self):
         """
@@ -241,7 +241,7 @@ class CoRe_md():
 
     def update_fromdict(self,dat):
         """
-        Update md from a dict
+        Update metadata from a dict
         """
         self.data.update(dat)
 
@@ -255,14 +255,15 @@ class CoRe_md():
         return {k: v for k, v in self.data.items() if v is not None}
 
     def substitute_None_vals(self):
-        return {k: ('' if v is None or 'None' else v) for k, v in self.data.items()}
+        return {k: v if v not in [None,'None'] else '' for k, v in self.data.items()}
     
     def write(self, path = '.',
               fname = 'metadata.txt',
               templ = TXT):
         """
-        Write md to file
+        Write metadata to file
         """
+        #d = self.data
         d = self.substitute_None_vals()
         t = Template(templ)
         s = t.safe_substitute(**d)

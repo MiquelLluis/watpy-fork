@@ -1,6 +1,6 @@
 from ..utils.ioutils import *
 from ..utils.coreh5 import CoRe_h5
-from .metadata import CoRe_md
+from .metadata import *
 from ..utils.viz import wplot, mplot
 
 
@@ -60,7 +60,7 @@ class CoRe_sim():
         self.code   = self.dbkey.split(':')[0]
         self.key    = self.dbkey.split(':')[1]
 
-        self.md = CoRe_md(path = self.path, md = "metadata_main.txt")
+        self.md = CoRe_md(path = self.path, metadata = "metadata_main.txt")
 
         self.run = {}
         self.update_runs()
@@ -83,7 +83,7 @@ class CoRe_sim():
             print(' Found no runs ''R??'' folders in {}'.format(self.path))
 
     def add_run(self, path, overwrite = 0,
-                dfile ='data.h5', md = 'metadata.txt'):
+                dfile ='data.h5', metadata = 'metadata.txt'):
         """
         Add h5 and meta data in 'path' to this simulation.
         The run number is incremented. Overwriting an existing run is
@@ -108,8 +108,8 @@ class CoRe_sim():
         shutil.copy('{}/{}'.format(path,dfile), '{}/{}'.format(dpath,'data.h5'))
 
         # Dump the correct metadata
-        md = CoRe_md(path = path, md = md)
-        md['database_key'] = self.dbkey+':'+r[-1]
+        md = CoRe_md(path = path, metadata = metadata)
+        md.data['database_key'] = self.dbkey+':'+r[-1]
         md.write(path = dpath)
 
         # Update the run 
@@ -164,7 +164,7 @@ class CoRe_idx():
         if 'data' in dl.keys(): dl = dl["data"]
         index = []
         for d in dl:
-            index.append(CoRe_md(path = self.path, md = d))
+            index.append(CoRe_md(path = self.path, metadata = d))
         return index
 
     def get_val(self, key):
@@ -191,15 +191,15 @@ class CoRe_idx():
         """
         Generate a new DB key
         """
-        self.dbkeys = get_val('database_key') # make sure this up-to-date
+        self.dbkeys = self.get_val('database_key') # make sure this up-to-date
         code_list = [x.split(':')[0] for x in self.dbkeys]
         n = code_list.count(code)
         if n == 0:
             print("Adding first entry from new code {}".format(code))
-            return '{}:{:4d}'.format(code,n)
-        return '{}:{:4d}'.format(code,n+1)
+            return '{}:{:04d}'.format(code,n)
+        return '{}:{:04d}'.format(code,n+1)
             
-    def add(self, code, name, md = None):
+    def add(self, code, name, metadata = None):
         """
         Adds an entry in the DB index.
         This creates a new DB key by incrementing the last entry
@@ -207,13 +207,13 @@ class CoRe_idx():
         Optional metadata can be passed either from a file or a
         dictionary. 
         """
-        newkey = self.dbkey_new(self,code)
-        newmd = CoRe_md(path = self.path, md = md)
-        newmd['database_key'] = newkey
-        newmd['simulation_name'] = name
-        self.index.append(md)
-        self.dbkeys = get_val('database_key') # make sure this up-to-date
-        return newmd
+        newkey = self.dbkey_new(code)
+        newmd = CoRe_md(path = self.path, metadata = metadata)
+        newmd.data['database_key'] = newkey
+        newmd.data['simulation_name'] = name
+        self.index.append(newmd)
+        self.dbkeys = self.get_val('database_key') # make sure this up-to-date
+        return newmd #, newkey
         
     def show(self, key, to_float, to_file = None):
         """
@@ -352,21 +352,21 @@ class CoRe_db():
         Metadata for the latter can be optionally passed as file or dictionary.
         It is then possible to add runs using the CoRe_sim() 'add_run' method.
         """
-        newmd = self.idb.add(code, name, metadata)
-        dbkey = newmd['database_key']
+        newmd = self.idb.add(code, name, metadata = metadata)
+        newdbkey = newmd.data['database_key']
 
         # Make dir
-        path = '{}/{}'.format(self.path,dbkey)
-        os.makedirs(path) #, exist_ok=True)
+        path = '{}/{}'.format(self.path,newdbkey.replace(':','_'))
+        os.makedirs(path) #, exist_ok=True) # should not exist!
 
         # Drop the metadata_main.tex
         newmd.write(path = path,
                     fname = 'metadata_main.txt',
                     templ = TXT_MAIN)
 
-        self.sim[dbkey] = CoRe_sim(os.path.join(self.path,dbkey))
-        print('Added {}. Now you can add runs!'.format(dbkey))
-        return dbkey
+        self.sim[newdbkey] = CoRe_sim(os.path.join(self.path,newdbkey.replace(':','_')))
+        print('Added {}. Now you can add runs!'.format(newdbkey))
+        return newdbkey
     
     def show(self, key, to_float, to_file = None):
         """
