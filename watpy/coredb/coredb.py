@@ -1,6 +1,6 @@
 from ..utils.ioutils import *
 from ..utils.coreh5 import CoRe_h5
-from .metadata import CoRe_md, TXT_MAIN
+from .metadata import CoRe_md, TXT_MAIN, MDKEYS
 from ..utils.viz import wplot, mplot
 
 
@@ -109,7 +109,8 @@ class CoRe_sim():
 
         # Dump the correct metadata
         md = CoRe_md(path = path, md = md)
-        md['database_key'] = self.dbkey+':'+r[-1]
+        #md['database_key'] = self.dbkey+':'+r[-1]
+        MDKEYS['database_key'] = self.dbkey+':'+r[-1]
         md.write(path = dpath)
 
         # Update the run 
@@ -173,7 +174,10 @@ class CoRe_idx():
         """
         dbk = []
         for i in self.index:
-            dbk.append(i.data[key])
+            if(i==None):
+                continue
+            else:
+                dbk.append(i.data[key])
         return dbk
     
     def to_json(self, fname, path = None, ifile = None):
@@ -209,8 +213,10 @@ class CoRe_idx():
         """
         newkey = self.dbkey_new(code)
         newmd = CoRe_md(path = self.path, md = md)
-        newmd['database_key'] = newkey
-        newmd['simulation_name'] = name
+        #newmd['database_key'] = newkey
+        MDKEYS['database_key'] = newkey
+        #newmd['simulation_name'] = name
+        MDKEYS['simulation_name'] = name
         self.index.append(md)
         self.dbkeys = self.get_val('database_key') # make sure this up-to-date
         return newmd
@@ -353,7 +359,8 @@ class CoRe_db():
         It is then possible to add runs using the CoRe_sim() 'add_run' method.
         """
         newmd = self.idb.add(code, name, metadata)
-        dbkey = newmd['database_key']
+        #dbkey = newmd['database_key']
+        dbkey = MDKEYS['database_key']
 
         # Make dir
         path = '{}/{}'.format(self.path,dbkey)
