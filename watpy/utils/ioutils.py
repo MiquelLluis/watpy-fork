@@ -168,11 +168,11 @@ def remove_template_missed_keys(string):
     in a string with multiple lines
     """
     clean = ""
-    for line in s.splitlines():
+    for line in string.splitlines():
         substr = re.search("\$\{(.*?)\}", line)
         if substr:
             line = re.sub("\$\{"+substr.group(1)+"}","",line)
-        news += line+'\n'
+        clean += line+'\n'
     return clean
 
 
