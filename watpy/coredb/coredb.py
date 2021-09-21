@@ -116,7 +116,9 @@ class CoRe_sim():
         self.run[r[-1]] = CoRe_run(dpath)
         
         # Need to update also the metadata_main.tex
-        self.md.data['available_resolutions'] += ', '+r[-1]
+        if len(r)==1: sep = ''
+        else:         sep = ', '
+        self.md.data['available_resolutions'] += sep + r[-1]
         self.write_metadata()
         
     def del_run(self,r):
