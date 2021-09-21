@@ -27,39 +27,45 @@ class CoRe_h5():
         if not os.path.isfile(os.path.join(path,dfile)):
             print("No .h5 file found!")
 
-    def create_dset(self, groups_and_files, path = None, dfile = None):
+    def create_dset(self, datain, path = None, dfile = None):
         """
-        Generic routine to create HDF5 archive from a list of (group,file)
-        e.g. [(group1, file1),(group1,file2),(group2,file3), ... ]
-        the files are text files
+        Generic routine to create HDF5 archive from a dictionary of 
+   
+        datain[group]['file1','file2', ... ] 
+
+        - Assumes filenames refer to text files and loads them
+        - Dasets are named after filenames
+        - Append to HDF5
+        - Creates the group if does not exists
+        - Overwrites datasets
         """
         if path is None: path == self.path
-        if not dfile: self.dfile = 'data.h5'
+        if not dfile:
+            self.dfile = 'data.h5'
+        else:
+            self.dfile = dfile
         with h5py.File(os.path.join(self.path,self.dfile), 'a') as fn:
-            for (g,f) in groups_and_files:
+            for g in datain.keys():
                 if g not in fn.keys():
-                    fn.create_group(group)
-                if f not in fn[g].keys():
+                    fn.create_group(g)                
+                for f in datain[g]:
                     data = np.loadtxt(os.path.join(path,f))
+                    if f in fn[g].keys():
+                        del fn[g][f]
                     fn[g].create_dataset(name=f, data=data)
         return
 
-    def read_dset(self, groups_and_dsets):
+    def read_dset(self):
         """
-        Generic routine to read HDF5 archive from a list of (group,dset)
-        e.g. [(group1, dset1),(group1,dset2),(group2,dset3), ... ]
-        Return a dictionary
+        Generic routine to read a HDF5 archive composed of 
+        groups/datasets. 
         """
         dset = {}
-        with h5py.File(os.path.join(self.path,self.dfile), 'a') as fn:
-            for (g,d) in groups_and_dsets:
-                if g not in fn.keys():
-                    print("Group {} does not exists, skip".format(g))
-                    continue
-                if d not in fn[g].keys():
-                    print("Dataset {} in group {} does not exists, skip".format(g,d))
-                    continue
-                dset[g][d] = fn[g][d][()]
+        with h5py.File(os.path.join(self.path,self.dfile), 'r') as fn:
+            for g in fn.keys():
+                dset[g] = {}
+                for f in fn[g].keys():
+                    dset[g][f] = fn[g][f][()]
         return dset
 
     def create(self, path = None):
