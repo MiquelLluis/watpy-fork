@@ -26,12 +26,50 @@ class CoRe_h5():
         self.dfile = dfile
         if not os.path.isfile(os.path.join(path,dfile)):
             print("No .h5 file found!")
-        
+
+    def create_dset(self, groups_and_files, path = None, dfile = None):
+        """
+        Generic routine to create HDF5 archive from a list of (group,file)
+        e.g. [(group1, file1),(group1,file2),(group2,file3), ... ]
+        the files are text files
+        """
+        if path is None: path == self.path
+        if not dfile: self.dfile = 'data.h5'
+        with h5py.File(os.path.join(self.path,self.dfile), 'a') as fn:
+            for (g,f) in groups_and_files:
+                if g not in fn.keys():
+                    fn.create_group(group)
+                if f not in fn[g].keys():
+                    data = np.loadtxt(os.path.join(path,f))
+                    fn[g].create_dataset(name=f, data=data)
+        return
+
+    def read_dset(self, groups_and_dsets):
+        """
+        Generic routine to read HDF5 archive from a list of (group,dset)
+        e.g. [(group1, dset1),(group1,dset2),(group2,dset3), ... ]
+        Return a dictionary
+        """
+        dset = {}
+        with h5py.File(os.path.join(self.path,self.dfile), 'a') as fn:
+            for (g,d) in groups_and_dsets:
+                if g not in fn.keys():
+                    print("Group {} does not exists, skip".format(g))
+                    continue
+                if d not in fn[g].keys():
+                    print("Dataset {} in group {} does not exists, skip".format(g,d))
+                    continue
+                dset[g][d] = fn[g][d][()]
+        return dset
+
     def create(self, path = None):
         """
         Create HDF5 archive using .txt CoRe files under 'path'. 
         If path is not specified, search the .txt files under self.path
         Always write .h5 files to self.path
+
+        This enforces the group/datasets convention in the CoRe DB.
+        It is very specific and limited, use the create_dset if possible.
         """
         if path is None: path == self.path
         self.dfile = 'data.h5'
@@ -101,7 +139,7 @@ class CoRe_h5():
         else:
             return radii.max()
     
-    def read(self, group, det=None):
+    def read(self, group, det = None):
         """
         Read a dataset from the .h5 archive files at the selected
         extraction radius (deafults to farthest). 
@@ -115,6 +153,9 @@ class CoRe_h5():
         Output:
         --------
         dataset as numpy array
+
+        This enforces the group/datasets convention in the CoRe DB.
+        It is very specific and limited, use the create_dset if possible.
         """
         dset = None
         fn = h5py.File(os.path.join(self.path,self.dfile), 'r')
