@@ -1,5 +1,6 @@
 from ..utils.ioutils import *
 import collections
+from string import Template
 
 
 # ------------------------------------------------------------------
@@ -206,8 +207,9 @@ class CoRe_md():
         """
         Print info on CoRe metadata
         """
+        print('\n *** CoRe DB METADATA ***\n')
         for key, val in MDKEYS.items():
-            print('{} : {}.'.format(key,val))
+            print('{} : {}.\n'.format(key,val))
 
     def init_core_md(self):
         """
@@ -249,17 +251,21 @@ class CoRe_md():
     def del_key(self,key):
         del self.data[key]
 
-    def remove_None_vals(self):
+    def remove_keys_None_vals(self):
         return {k: v for k, v in self.data.items() if v is not None}
-        
+
+    def substitute_None_vals(self):
+        return {k: ('' if v is None or 'None' else v) for k, v in self.data.items()}
+    
     def write(self, path = '.',
               fname = 'metadata.txt',
               templ = TXT):
         """
         Write md to file
         """
+        d = self.substitute_None_vals()
         t = Template(templ)
-        s = t.safe_substitute(**self.data)
+        s = t.safe_substitute(**d)
         s = remove_template_missed_keys(s)
         open(os.path.join(path,fname), "w").write(s)
-
+        print('Wrote {}'.format(os.path.join(path,fname)))
