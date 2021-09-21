@@ -207,7 +207,7 @@ class CoRe_md():
         Print info on CoRe metadata
         """
         for key, val in MDKEYS.items():
-            print('{} : {}.'.format(key,val))
+            print('{} : {}.\n'.format(key,val))
 
     def init_core_md(self):
         """

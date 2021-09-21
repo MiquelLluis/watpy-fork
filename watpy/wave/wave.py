@@ -405,17 +405,6 @@ class wave(object):
         Rh = self.h /self.prop['mass']
         omega = self.prop['mass'] * self.phase_diff1()
         return wplot(u, Rh, omega=omega, to_file = to_file)
-        # import matplotlib.pyplot as plt
-        # fig, ax = plt.subplots(2,1, sharex=True)
-        # ax[0].plot(u, Rh.real, label='Real part')
-        # ax[0].plot(u, np.abs(Rh), label='Amplitude')
-        # ax[1].plot(u, omega)
-        # ax[1].set_xlabel(r'$u/M$')
-        # ax[0].set_ylabel(r'$R/M\, h_{{{}{}}}$'.format(self.prop['lmode'],self.prop['mmode']))
-        # ax[1].set_ylabel(r'$M\,\omega$')
-        # ax[0].set_xlim([0, u.max()])
-        # if to_file: plt.savefig(to_file)
-        # return fig
 
     def show_psi4(self, to_file=None):
         """
@@ -425,18 +414,6 @@ class wave(object):
         psi4 = self.p4 
         omega = self.prop['mass'] * self.phase_diff1(var='Psi4')
         return wplot(u, psi4, omega=omega, to_file = to_file)
-        # import matplotlib.pyplot as plt
-        # fig, ax = plt.subplots(2,1, sharex=True)
-        # ax[0].plot(u, Rh.real, label='Real part')
-        # ax[0].plot(u, np.abs(Rh), label='Amplitude')
-        # ax[1].plot(u, omega)
-        # ax[1].set_xlabel(r'$u/M$')
-        # ax[0].set_ylabel(r'$R\,\psi_{{{}{}}}$'.format(self.prop['lmode'],self.prop['mmode']))
-        # ax[1].set_ylabel(r'$M\,\omega$')
-        # ax[0].set_xlim([0, u.max()])
-        # ax[0].legend()
-        # if to_file: plt.savefig(to_file)
-        # return fig
 
     def prop_read_from_file(self, filename):
         """
