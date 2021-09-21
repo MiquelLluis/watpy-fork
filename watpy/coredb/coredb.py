@@ -173,7 +173,10 @@ class CoRe_idx():
         """
         dbk = []
         for i in self.index:
-            dbk.append(i.data[key])
+            if(i==None):
+                continue
+            else:
+                dbk.append(i.data[key])
         return dbk
     
     def to_json(self, fname, path = None, ifile = None):
