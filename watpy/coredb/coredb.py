@@ -1,8 +1,7 @@
 from ..utils.ioutils import *
 from ..utils.coreh5 import CoRe_h5
-from .metadata import CoRe_md
+from .metadata import CoRe_md, TXT_MAIN
 from ..utils.viz import wplot, mplot
-import TXT_MAIN from .metadata
 
 
 # ------------------------------------------------------------------
