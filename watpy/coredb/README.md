@@ -7,8 +7,7 @@ Database structure
      |	  |--- R??/
      |	  |    | --- data.h5
      |	  |    | --- metadata.txt 
-     ...   
-     |	   | --- metadata_main.txt
+     |	  |--- metadata_main.txt
 
 The `database_key` of a simulation is composed as `<code>:<simulation_number>`, and as `<code>:<simulation_number>:R<run_number>` for a run in a simulation.
 
@@ -60,11 +59,11 @@ $ head Rpsi4_l2_m2_r00550.txt
 -1.551895954766290515e+02 4.952638982383438915e+00 -3.107133889787561110e+00 -4.581621383784686453e-03 5.846615593562694002e+00 5.603013021802030202e-01 0.000000000000000000e+00
 -1.540165749487698008e+02 4.822284490267165324e+00 -2.986663714318995133e+00 -4.581621383784686453e-03 5.672264789967142562e+00 5.545233476776169068e-01 3.200000000000000178e+00
 ...
-``
+```
 
 Mode strain:
 
-``
+```
 $ head Rh_l2_m2_r00650.txt
 
 # r=6.500000e+02
