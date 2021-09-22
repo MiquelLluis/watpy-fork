@@ -33,7 +33,19 @@ For users interested in interactive usage of this package we suggest ipyhton not
 
 * [iPython](https://ipython.org/) (Strictly better version of the basic python shell)
 * [Jupyter](https://jupyter.org/) (Notebooks, slides, HTML conversion of notebooks and more)
-    
+
+## Main
+
+`watpy` implements few classes to clone and work with CoRe waveforms.
+
+ * `wave()` and `mwaves()` for multipolar waveforms data, see [wave.py](watpy/wave/wave.py)
+ * `CoRe_db()` to clone the CoRe DB, add data etc, see [coredb.py](watpy/coredb/coredb.py)
+ * `CoRe_idx()` to work with the [CoRe DB index](https://core-gitlfs.tpi.uni-jena.de/core_database/core_database_index/-/tree/master), see [coredb.py](watpy/coredb/coredb.py)
+ * `CoRe_sim()` to work with simulation data in a CoRe repository, see [coredb.py](watpy/coredb/coredb.py)
+ * `CoRe_run()` to work with one simulation run data in a CoRe repository, see [coredb.py](watpy/coredb/coredb.py)
+ * `CoRe_h5()` to work with HDF5 data, see [coredb.py](watpy/utils/coreh5.py)
+ * `CoRe_md()` to manage the metadata, see [metadata.py](watpy/codedb/metadata.py)
+
 ## Features
 
  * Classes for multipolar waveform data
