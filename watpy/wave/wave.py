@@ -149,9 +149,8 @@ class mwaves(object):
     path      : Path to the data directory
     code      : Which code/format the data are saved in (core, cactus, bam)
     filenames : List of files to be loaded
-    mass      : ADM mass of the system
-    f0        : Initial garvitational wave frequency of the system
-
+    mass      : Binary mass (solar masses)
+    f0        : Initial gravitational wave frequency of the system (mass rescaled, geom.units)
     ignore_negative_m : Whether or not to load the negative m modes
 
     -----------
@@ -166,7 +165,6 @@ class mwaves(object):
 
     FIXME: this assumes every radius has the same modes
     """
-
     def __init__(self, path='.', code='core', filenames=None, 
                  mass=None, f0=None, ignore_negative_m=False):
         """
@@ -305,11 +303,8 @@ class wave(object):
     path      : Path to the data directory
     code      : Which code/format the data are saved in (core, cactus, bam)
     filenames : List of files to be loaded
-    mass      : ADM mass of the system
-    f0        : Initial gravitational wave frequency of the system
-
-    ignore_negative_m : Whether or not to load the negative m modes
-
+    mass      : Binary mass (solar masses)
+    f0        : Initial gravitational wave frequency of the system (mass rescaled, geom.units)
     -----------
     Contains
     -----------

@@ -21,7 +21,7 @@ class CoRe_run():
     def __init__(self, path):
         self.path = path
         self.md = CoRe_md(path = self.path)
-        self.data = CoRe_h5(self.path, self.md, 'data.h5')
+        self.data = CoRe_h5(self.path, metadata = self.md)
 
     def type(self):
         """

@@ -174,8 +174,6 @@ def radius_extrap(t, psi4, r0, l=2, m=2, m0=1):
 
 
 def richardson_extrap(p, h, t, y, kref=0, wrtref=True):
-
-
     """
     Richardson extrapolation 
 

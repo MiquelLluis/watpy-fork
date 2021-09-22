@@ -172,9 +172,9 @@ hydro_flux                            = ${hydro_flux}
 hydro_reconstruction                  = ${hydro_reconstruction}
 hydro_atmosphere_level                = ${hydro_atmosphere_level}
 hydro_atmosphere_factor               = ${hydro_atmosphere_factor}
-number_of_orbits                      = ${number_of_orbits}
 evolution_mol_scheme                  = ${evolution_mol_scheme}
 eos_evolution_Gamma_thermal           = ${eos_evolution_Gamma_thermal}
+number_of_orbits                      = ${number_of_orbits}
 """
 
 TXT_MAIN = TXT_HEAD + TXT_SUBHEAD1 + TXT_ID
@@ -263,10 +263,9 @@ class CoRe_md():
         """
         Write metadata to file
         """
-        #d = self.data
         d = self.substitute_None_vals()
         t = Template(templ)
         s = t.safe_substitute(**d)
-        s = remove_template_missed_keys(s)
+        s = remove_template_missed_keys(s) 
         open(os.path.join(path,fname), "w").write(s)
         print('Wrote {}'.format(os.path.join(path,fname)))
