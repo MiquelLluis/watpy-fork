@@ -34,7 +34,7 @@ For users interested in interactive usage of this package we suggest ipyhton not
 * [iPython](https://ipython.org/) (Strictly better version of the basic python shell)
 * [Jupyter](https://jupyter.org/) (Notebooks, slides, HTML conversion of notebooks and more)
 
-## Main
+## Content
 
 `watpy` implements few classes to clone and work with CoRe waveforms.
 
