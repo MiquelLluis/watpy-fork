@@ -11,9 +11,9 @@ from string import Template
 MDKEYS = {
     'database_key': 'A string like BAM:0001:R01 or THC:0013:R02 that identifies the simulation by the code employed for the evolution and a unique progressive number in the CoRe DB. The first part of the string corresponds to the repository name, like `BAM:0001` or `THC:0013`, and appears in the summary `metadata_main.txt`. The full string includes the different runs (different resolutions, grid setups, hydro scheme, etc.) and appears in the `metadata.txt` inside each run folder',
     #
-    'simulation_name': 'A string that identifies the simulated binary. The convention used so far is `<EOS>_<mass1>_<mass2>_<spin1z>_<spin2z>_<initial_frequency>_<setup_details>` formatted as e.g. `2B_1.350_1.350_0.00_0.00_0.038_0.186`. Similarly to the database_key, the first part of this string common to all runs of a simulation appears in the summary `metadata_main.txt`, While the full string appears in the `metadata.txt` inside each run folder',
-    #
     'available_resolutions': 'This is the list of runs (different resolutions, grid setups, hydro scheme, etc.) available for a given simulation, e.g. R01, R02, R03, etc. Note that with "simulation" here we indicate the  set of runs of a given physical setup, i.e. of the same initial data and with the same physical assumptions (e.g. description of matter fields).\n[This field should really be called `available_runs`, to be fixed in the future].',
+    #
+    'simulation_name': 'A string that identifies the simulated binary. The convention used so far is `<EOS>_<mass1>_<mass2>_<spin1z>_<spin2z>_<initial_frequency>_<setup_details>` formatted as e.g. `2B_1.350_1.350_0.00_0.00_0.038_0.186`. Similarly to the database_key, the first part of this string common to all runs of a simulation appears in the summary `metadata_main.txt`, While the full string appears in the `metadata.txt` inside each run folder',
     #
     'reference_bibkeys': 'BibTeX code(s) from HEP-SPIRES referrring to the publication of the simulation.', 
     #
@@ -41,6 +41,8 @@ MDKEYS = {
     #
     'id_Lambda': 'Initial data: reduced tidal parameters (this is really $\tilde{\Lambda}$)',
     #
+    'id_eccentricity': 'Initial data: measured eccentricity.',
+    #
     'id_mass_starA': 'Initial data: Gravitational (TOV) mass of star A (solar masses)',
     #
     'id_rest_mass_starA': 'Initial data: Rest-mass of star A (solar masses)',
@@ -60,8 +62,6 @@ MDKEYS = {
     'id_LoveNum_kell_starB': 'Initial data: Gravitoelectric Love numbers for star B and for ell=2,3,4', 
     #
     'id_Lambdaell_starB': 'Initial data: tidal polarizability parameters for star B and for ell=2,3,4',
-    #
-    'id_eccentricity': 'Initial data: measured eccentricity.',
     #
     'evolution_code': 'Code employed for the evolution of initial data, e.g. BAM, THC, etc',
     #
@@ -89,8 +89,6 @@ MDKEYS = {
     #
     'metric_boundary_conditions': 'Boundary conditions for the metric fields',
     #
-    'eos_evolution_Gamma_thermal': 'EOS employed in the evolution or value of the adiabatic exponent for the thermal pressure component',
-    #
     'hydro_flux': 'Numerical flux employed in the hydrodynamics scheme',
     #
     'hydro_reconstruction': 'Reconstruction method employed in the hydrodynamics',
@@ -99,10 +97,12 @@ MDKEYS = {
     #
     'hydro_atmosphere_factor': 'Atmosphere is set when rest-mass density drops below the atmosphere level times this factor',
     #
+    'number_of_orbits': 'Number of orbits',
+    #
     'evolution_mol_scheme': 'Time integrator used in the method of line scheme',
     #
-    'number_of_orbits': 'Number of orbits',
-}
+    'eos_evolution_Gamma_thermal': 'EOS employed in the evolution or value of the adiabatic exponent for the thermal pressure component',
+    }
 
 MDKEYS = collections.OrderedDict(MDKEYS)
 
@@ -114,12 +114,15 @@ MDKEYS = collections.OrderedDict(MDKEYS)
 
 TXT_HEAD="""\
 database_key            = ${database_key}
-simulation_name         = ${simulation_name}
-reference_bibkeys       = ${reference_bibkeys}
 """
 
 TXT_SUBHEAD1="""\
 available_resolutions   = ${available_resolutions}
+"""
+
+TXT_SUBHEAD2="""\
+simulation_name         = ${simulation_name}
+reference_bibkeys       = ${reference_bibkeys}
 """
 
 TXT_ID="""\
@@ -138,6 +141,8 @@ id_gw_frequency_Momega22    = ${id_gw_frequency_Momega22}
 id_eos                      = ${id_eos}
 id_kappa2T                  = ${id_kappa2T}
 id_Lambda                   = ${id_Lambda}
+id_eccentricity             = ${id_eccentricity}
+
 id_mass_starA               = ${id_mass_starA}
 id_rest_mass_starA          = ${id_rest_mass_starA}
 id_spin_starA               = ${id_spin_starA}
@@ -148,7 +153,6 @@ id_rest_mass_starB          = ${id_rest_mass_starB}
 id_spin_starB               = ${id_spin_starB}
 id_LoveNum_kell_starB       = ${id_LoveNum_kell_starB}
 id_Lambdaell_starB          = ${id_Lambdaell_starB}
-id_eccentricity             = ${id_eccentricity}
 """
  
 TXT_EV="""\
@@ -172,13 +176,13 @@ hydro_flux                            = ${hydro_flux}
 hydro_reconstruction                  = ${hydro_reconstruction}
 hydro_atmosphere_level                = ${hydro_atmosphere_level}
 hydro_atmosphere_factor               = ${hydro_atmosphere_factor}
+number_of_orbits                      = ${number_of_orbits}
 evolution_mol_scheme                  = ${evolution_mol_scheme}
 eos_evolution_Gamma_thermal           = ${eos_evolution_Gamma_thermal}
-number_of_orbits                      = ${number_of_orbits}
 """
 
-TXT_MAIN = TXT_HEAD + TXT_SUBHEAD1 + TXT_ID
-TXT = TXT_HEAD + TXT_ID + TXT_EV
+TXT_MAIN = TXT_HEAD + TXT_SUBHEAD1 + TXT_SUBHEAD2 + TXT_ID
+TXT = TXT_HEAD + TXT_SUBHEAD2 + TXT_ID + TXT_EV
 
 
 # ------------------------------------------------------------------
