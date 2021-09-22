@@ -163,6 +163,8 @@ class mwaves(object):
     * mmode : list of available m multipoles
     * radii : list of available extraction radii
     * data  : python dictionary of files loaded into the class
+
+    FIXME: this assumes every radius has the same modes
     """
 
     def __init__(self, path='.', code='core', filenames=None, 
@@ -177,7 +179,7 @@ class mwaves(object):
         self.f0    = f0
         self.code  = code
 
-        self.vars  = set([])
+        self.var  = set([])
         self.modes = set([])
         self.lmode = set([])
         self.mmode = set([])
@@ -204,7 +206,7 @@ class mwaves(object):
                     r = wfile_get_detrad(os.path.join(self.path,fname))
                     if var == 'psi4': var = 'Psi4'
                     
-                self.vars.add(var)
+                self.var.add(var)
                 self.lmode.add(l)
                 self.mmode.add(m)
                 self.modes.add((l,m))
@@ -217,7 +219,7 @@ class mwaves(object):
                 else:
                     self.data[key] = [fname]
 
-        self.vars  = sorted(list(self.vars))
+        self.var   = sorted(list(self.var))
         self.modes = sorted(list(self.modes))
         self.lmode = sorted(list(set([m[0] for m in self.modes])))
         self.mmode = sorted(list(set([m[1] for m in self.modes])))
@@ -232,54 +234,64 @@ class mwaves(object):
         Get the multipole output for the given variable/multipole at the given
         extraction radius
         * var : if not specified it defaults to the first variable
-        * l   : if not specified it defaults to 2 (or the minimum l if
-        2 is not available) 
-        * m   : if not specified it defaults to 2 (or the minimum m
-        if 2 is not available)
+        * l   : if not specified it defaults to 2 
+        * m   : if not specified it defaults to 2 
         * r   : if not specified it defaults to the maximum radius
         """
-        if var is None:
-            var = self.vars[0]
-        if l is None:
-            if 2 in self.lmode:
-                l = 2
-            else:
-                l = self.modes[0][0]
-        if m is None:
-            if 2 in self.mmode:
-                m = 2
-            else:
-                m = self.modes[0][1]
+        #FIXME: this assumes all radii have the same modes!
+
         if r is None:
             r = self.radii[-1]
+        
+        if var is None:
+            var = self.var[0]
+
+        if l is None:
+            l = 2
+        if l not in self.lmode:
+            raise ValueError("Unknown l-index {}".format(l))
+            
+        if m is None:
+            m = 2
+        if m not in self.mmode:
+            raise ValueError("Unknown m-index {}".format(m))
+
         key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)
-        return wave(self.path, self.code, self.data[key][0],
-                    self.mass, self.f0)
+        return wave(path = self.path, code = self.code, filename = self.data[key][0],
+                    mass = self.mass, f0 = self.f0)
 
     def energetics(self, m1, m2, madm, jadm, 
-                   radius=None, path_out=None):
+                   radii = None, path_out = None):
+        """
+        Compute energetics from multipolar waveform
+        """
         h     = {}
         h_dot = {}
-        if radius is None: radius = self.radii[-1]
-        for lm in self.modes:
-            h[lm]     = self.get(l=lm[0], m=lm[1], r=radius)
-            h_dot[lm] = diff1(h[lm].time, h[lm].h)
-        
-        t = h[lm].time
-        self.e, self.edot, self.j, self.jdot = waveform2energetics(h, h_dot, t, 
-                                                                   self.modes, self.mmode)
+        u     = {}
+        if radii is None: radii = self.radii
 
-        self.eb   = (madm - self.e - m1 -m2) / (m1*m2/(m1+m2))
-        self.jorb = (jadm - self.j) / (m1*m2) 
+        for rad in radii:
+            
+            for lm in self.modes: #FIXME: this assumes all radii have the same modes!
+                w         = self.get(l=lm[0], m=lm[1], r=rad)
+                t         = w.time
+                u[lm]     = w.time_ret()
+                h[lm]     = w.h
+                h_dot[lm] = diff1(t, h[lm])
+                        
+            self.e, self.edot, self.j, self.jdot = waveform2energetics(h, h_dot, t, 
+                                                                       self.modes,
+                                                                       self.mmode)
+            self.eb   = (madm - self.e - m1 -m2) / (m1*m2/(m1+m2))
+            self.jorb = (jadm - self.j) / (m1*m2) 
 
-        if path_out:
-            headstr  = "r=%e\nM=%e\n " % (radius, self.mass)
-            headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4 t:5"
-
-            data = np.c_[self.jorb, self.eb, h[(2,2)].time_ret()/self.mass,
-                         self.e, self.j, h[(2,2)].time]
-            fname = "EJ_r%05d.txt" % int(radius)
-            np.savetxt('{}/{}'.format(path_out,fname), data, header=headstr)
+            if path_out:
+                headstr  = "r=%e\nM=%e\n" % (rad, self.mass)
+                headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4 t:5"
+                data = np.c_[self.jorb, self.eb, u[(2,2)]/self.mass,
+                             self.e, self.j, t]
+                fname = "EJ_r%05d.txt" % int(rad)
+                np.savetxt('{}/{}'.format(path_out,fname), data, header=headstr)
 
 
 
@@ -385,7 +397,7 @@ class wave(object):
         R        = self.prop['detector.radius']
         headstr  = "r=%e\n" %(self.prop["detector.radius"])
         headstr += "M=%e\n" %(M)
-        if var=='Psi4':
+        if var == 'Psi4':
             headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6"
             data = np.c_[self.time_ret()/M, self.p4.real*R/M, self.p4.imag*R/M, M*self.phase_diff1(var),
                      self.amplitude(var)*R/M, self.phase(var), self.time]

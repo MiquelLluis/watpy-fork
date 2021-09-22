@@ -232,10 +232,11 @@ def waveform2energetics(h, h_dot, t, modes, mmodes):
     """
     Compute GW energy and angular momentum from multipolar waveform
 
-    * h[l,m], h_dot[l,m] : multipolar strain and its derivative
-    * t                  : time array
-    * modes              : (l,m) indexes
-    * mmodes             :   m   indexes
+    * h[(l,m)]     : multipolar strain 
+    * h_dot[(l,m)] : time-derivative of multipolar strain
+    * t            : time array
+    * modes        : (l,m) indexes
+    * mmodes       :   m   indexes
     """
     dtime = t[1]-t[0]
 
@@ -246,7 +247,7 @@ def waveform2energetics(h, h_dot, t, modes, mmodes):
     for l, m in modes:
         E_GW_dot_ff[(l,m)] = 1.0/(16.*np.pi) * np.abs(h_dot[l,m])**2 
         E_GW_ff[(l,m)] = num.integrate(E_GW_dot_ff[l,m]) * dtime
-        J_GW_dot_ff[(l,m)] = 1.0/(16.*np.pi) * m * np.imag(h[l,m].h * np.conj(h_dot[l,m])) 
+        J_GW_dot_ff[(l,m)] = 1.0/(16.*np.pi) * m * np.imag(h[l,m] * np.conj(h_dot[l,m])) 
         J_GW_ff[(l,m)] = num.integrate(J_GW_dot_ff[l,m]) * dtime
 
     E_GW_dot = {}

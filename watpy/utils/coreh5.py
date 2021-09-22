@@ -20,9 +20,9 @@ class CoRe_h5():
     """
     Class to read/write CoRe HDF5 archives
     """ 
-    def __init__(self, path, mdata, dfile = 'data.h5'):
+    def __init__(self, path, metadata = None, dfile = 'data.h5'):
         self.path  = path
-        self.mdata = mdata
+        self.mdata = metadata # needed only in create/write
         self.dfile = dfile
         if not os.path.isfile(os.path.join(path,dfile)):
             print("No .h5 file found!")
@@ -31,13 +31,14 @@ class CoRe_h5():
         """
         Generic routine to create HDF5 archive from a dictionary of 
    
-        datain[group]['file1','file2', ... ] 
+        datain[group1]['fname1','fname2', ...]
+        datain[group1]['fname1',...]
+        datain[group3]['fname3',...]
+        ...
 
-        - Assumes filenames refer to text files and loads them
+        - Assumes filenames refer to existing text files
         - Dasets are named after filenames
-        - Append to HDF5
-        - Creates the group if does not exists
-        - Overwrites datasets
+        - Appends to and/or overwrites HDF5
         """
         if path is None: path == self.path
         if not dfile:
@@ -74,8 +75,7 @@ class CoRe_h5():
         If path is not specified, search the .txt files under self.path
         Always write .h5 files to self.path
 
-        This enforces the group/datasets convention in the CoRe DB.
-        It is very specific and limited, use the create_dset if possible.
+        Deprecated, use the create_dset if possible.
         """
         if path is None: path == self.path
         self.dfile = 'data.h5'
@@ -116,6 +116,40 @@ class CoRe_h5():
 
         print('wrote CoRe {}/{}'.format(self.path,self.dfile))
 
+    def read(self, group, det = None):
+        """
+        Read a dataset from the .h5 archive files at the selected
+        extraction radius (deafults to farthest). 
+        --------
+        Input:
+        --------
+        group   : e.g. 'rh_22' for the 22-strain mode, 'rpsi4_22' for the Weyl
+                  scalar, 'energy' for the energy curves etc
+        det     : Extraction radius
+        --------
+        Output:
+        --------
+        dataset as numpy array
+
+        Deprecated, use the create_dset if possible.
+        """
+        dset = None
+        with h5py.File(os.path.join(self.path,self.dfile), 'r') as fn:
+            if group not in fn.keys():
+                raise ValueError("Group {} not available".format(group))
+            rad = self.dset_radii(fn,group=group, det=det)
+            if group.startswith('rh_'):
+                l,m = self.lm_from_group(group)
+                dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
+            elif group.startswith('rpsi4_'):
+                l,m = self.lm_from_group(group)
+                dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
+            elif group.startswith('EJ_'):
+                dset = fn[group]['EJ__r{:05d}.txt'.format(int(rad))][()]
+            else:
+                raise ValueError("Unknown group {}".format(group))
+        return np.array(dset)
+        
     def dump(self):
         """
         h5dump -n
@@ -145,41 +179,6 @@ class CoRe_h5():
         else:
             return radii.max()
     
-    def read(self, group, det = None):
-        """
-        Read a dataset from the .h5 archive files at the selected
-        extraction radius (deafults to farthest). 
-        --------
-        Input:
-        --------
-        group   : e.g. 'rh_22' for the 22-strain mode, 'rpsi4_22' for the Weyl
-                  scalar, 'energy' for the energy curves etc
-        det     : Extraction radius
-        --------
-        Output:
-        --------
-        dataset as numpy array
-
-        This enforces the group/datasets convention in the CoRe DB.
-        It is very specific and limited, use the create_dset if possible.
-        """
-        dset = None
-        fn = h5py.File(os.path.join(self.path,self.dfile), 'r')
-        if group not in fn.keys():
-            raise ValueError("Group {} not available".format(group))
-        rad = self.dset_radii(fn,group=group, det=det)
-        if group.startswith('rh_'):
-            l,m = self.lm_from_group(group)
-            dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))] 
-        elif group.startswith('rpsi4_'):
-            l,m = self.lm_from_group(group)
-            dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))]
-        elif group.startswith('EJ_'):
-            dset = fn[group]['EJ__r{:05d}.txt'.format(int(rad))]
-        else:
-            raise ValueError("Unknown group {}".format(group))
-        return np.array(dset)
-
     def write_strain_to_txt(self, lm=[(2,2)]):
         """
         Extract r*h_{22} from the .h5 archive into separate .txt
