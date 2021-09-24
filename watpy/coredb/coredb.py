@@ -169,6 +169,16 @@ class CoRe_idx():
             index.append(CoRe_md(path = self.path, metadata = d))
         return index
 
+    def update_from_mdlist(self, mdlist, overwrite = True):
+        """
+        Update the index from a list of CoRe_md() metadata objects
+        (Currently only overwrite) 
+        """
+        self.index = mdlist
+        self.dbkeys = self.get_val('database_key')
+        self.N = len(self.index)        
+        return
+    
     def get_val(self, key):
         """
         Get values list for a given key
@@ -192,6 +202,19 @@ class CoRe_idx():
         with open(os.path.join(path, ifile), 'w') as f:
             json.dump({"data": sort_index}, f)
 
+    def to_json_tmplk(self, fname, tmpl = TXT_MAIN, path = None, ifile = None):
+        """
+        As 'to_json()' but filters the output based on the keys from a template
+        """
+        if path == None: path = self.path
+        if ifile == None: ifile = self.ifile
+        if tmpl:
+            keys = template_to_keys(tmpl)
+            sort_index = [{key:val for key, val in ele.items() if key in keys} for ele in self.index]
+        sort_index = sorted(sort_index, key=lambda k: k['database_key']) 
+        with open(os.path.join(path, ifile), 'w') as f:
+            json.dump({"data": sort_index}, f)
+            
     def dbkey_new(self,code):
         """
         Generate a new DB key

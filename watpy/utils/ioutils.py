@@ -175,6 +175,18 @@ def remove_template_missed_keys(string):
         clean += line+'\n'
     return clean
 
+def template_to_keys(templ, delim = '=', comments='#'):
+    """
+    Return list of keys (strings) from a multiline template string like
+
+    # commment
+    key1 = val1
+    key2 = val2
+    ...
+
+    """
+    return [l.split(delim)[0].strip() for l in templ.splitlines() if not l.startswith(comments)]
+
 
 #---------------------------------------------------------------------------
 # CSV, JSON, TXT files & dict
