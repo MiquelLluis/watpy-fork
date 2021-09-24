@@ -12,7 +12,7 @@ cdb = CoRe_db(db_path)
 idb = cdb.idb
 
 # make sure the DB is up-to-date!
-idb.sync()
+cdb.sync()
 
 # read metadata_main in a list
 mdlist = []
