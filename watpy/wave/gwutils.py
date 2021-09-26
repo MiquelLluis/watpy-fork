@@ -150,6 +150,84 @@ def min_phasediff_L2(t1,p1,t2,p2, tab, guess=[0.,0.], tol=1e-9):
     return p2i, xopt[1], xopt[0], Dphi
 
 
+def richardson_extrap(p, y0, h0, y1, h1):
+    """
+    Richardson extrapolation.
+
+    Given two data points 
+        `y0` and `y1`,
+    compute with grid spacings 
+        `h0` and `h1`,
+    performs Richardson extrapolation assuming order of convergence `p`.
+
+    Returns extrapolated value `ye`.
+
+    NOTE: If you are only given the number of points, then pass 
+        `1/n0` and `1/n1` 
+    instead of
+        `h0` and `h1`
+    where `ni` is the number of points corresponding to `hi`.
+    """
+    s = (h0/h1)**p
+    yextrp = (s*y1 - y0) / (s - 1.0)
+    return yextrp
+
+
+def richardson_extrap_series(p, y, t, h):
+    """
+    Richardson extrapolation in resolution.
+
+    Given data sets yi, i=1...N, collected as
+             y = [y0, y1, y2, ... , yN],
+    with corresponding relative time arrays
+             t = [t0, t1, t2, ... , tN],
+    computed with (descendingly ordered) grid spacings
+             h = [h1, h1, h2, ... , hN],
+    performs Richardson extrapolation assuming order of convergence `p`.
+
+    Returns extrapolated dataset `ye` and estimated error `err`
+    computed wrt second to last extrapolation step at each point.
+
+    NOTE: `h` is the grid spacing, not the number of points `n`. In the latter case
+    just pass `1/n` instead.
+    NOTE: A data set consists out of `yi` and `ti` and both arrays have to be 
+    of the same length. However, the length of a data set does not have to agree
+    among different resolutions.
+    """
+
+    N = len(h) # number of data sets passed
+    if N != len(t) or len(t) != len(y):
+        raise ValueError("Inconsistent number of data sets received: Arrays h, t, p must have same length!")
+
+    # extrapolated result will be sampled on grid of highest resolution data
+    te = t[-1]; n = len(te)
+    ye = np.zeros(n); err = np.zeros(n)
+
+    # interpolate all data sets on time grid of extrapolated result
+    intrp_y = [ num.linterp(te, t[k], y[k]) for k in range(N-1) ]
+    intrp_y.append(y[-1])
+
+    # compute Richardson extrapolation pointwise
+    for i in range(n):
+        # procedure is similar to Romberg integration
+        # but instead of recomputing integrals for different resolutions, here
+        # we just use the provided data to populate the first column to build 
+        # up the iteration
+        extrp_y = np.zeros((N,N))
+        extrp_y[:,0] = [ intrp_y[k][i] for k in range(N) ]
+
+        # iterate each row with Richardson extrapolation and systematically
+        # reduce higher order errors
+        for k in range(1,N):
+            for j in range(0, k):
+                extrp_y[k,j+1] = richardson_extrap(p+j, extrp_y[k-1,j], h[k-1], extrp_y[k,j], h[k])
+
+        # error estimate wrt to second to last extrapolation
+        err[i] = extrp_y[-1,-1] - extrp_y[-2,-2]
+        ye[i] = extrp_y[-1,-1]
+    return ye, te
+
+
 def radius_extrap(t, psi4, r0, l=2, m=2, m0=1):
     """
     Perform extrapolation in radius
@@ -173,7 +251,47 @@ def radius_extrap(t, psi4, r0, l=2, m=2, m0=1):
     return C*(psi4 - (l-1)*(l+2)/(2*rA)*np.cumsum(psi4*dt))
 
 
-def richardson_extrap(p, h, t, y, kref=0, wrtref=True):
+def radius_extrap_polynomial(ys, rs, K):
+    """
+    Given different datasets yi, i=1...N, collected as
+             ys = [y0, y1, y2, ... , yN]
+    and array containing extraction radii
+             rs = [r0, r1, r2, ... , rN],
+    compute the asymptotic value of y as r goes to infinity from an Kth
+    order polynomial in 1/r, e.g.
+
+        yi = y_infty + \sum_i=k^K ci / ri^k,
+
+    where y_infty and the K coefficients ci are determined through a least
+    squares polynomial fit from the above data.
+
+    ys ... collection of data sets yi which all are of the same length,
+           e.g. all sampled on the same grid u.
+    rs ... extraction radii of the data samples yi
+    K  ... maximum polynomial order of 1/r polynomial
+    """
+    N = len(ys)
+    if N != len(rs):
+        raise ValueError("Mismatch in number of data sets ys and radii rs encountered!")
+    L = len(ys[0])
+    for i in range(1,N):
+        if len(ys[i]) != L:
+            raise ValueError("Inhomogenuous data set encountered! Check if all ys are sampled " *
+                             "on the same grid")
+
+    yinfty = np.zeros(L)
+    # implementation relies on example given at 
+    # https://docs.scipy.org/doc/scipy/reference/reference/generated/scipy.linalg.lstsq.html#scipy.linalg.lstsq
+    M = np.array(rs)[:, np.newaxis]**(-np.array(range(K+1))) # inverse powers of rs
+    for i in range(L):
+        ys_i = [ ys[k][i] for k in range(N) ] # gather data for common radius
+        p, *_ = sp.linalg.lstsq(M, ys_i)
+        yinfty[i] = p[0] # zeroth coefficient equals value at r -> infty
+        
+    return yinfty
+
+
+def _richardson_extrap_old(p, h, t, y, kref=0, wrtref=True):
     """
     Richardson extrapolation 
 
