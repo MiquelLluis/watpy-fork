@@ -213,7 +213,7 @@ class CoRe_idx():
         sort_index = [{key:val for key, val in ele.data.items() if key in keys} for ele in self.index]
         sort_index = sorted(sort_index, key=lambda k: k['database_key']) 
         with open(os.path.join(path, ifile), 'w') as f:
-            json.dump({"data": sort_index}, f)
+            json.dump({"data": sort_index}, f, indent=2)
             
     def dbkey_new(self,code):
         """
