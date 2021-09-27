@@ -208,9 +208,8 @@ class CoRe_idx():
         """
         if path == None: path = self.path
         if ifile == None: ifile = self.ifile
-        if tmpl:
-            keys = template_to_keys(tmpl)
-            sort_index = [{key:val for key, val in ele.items() if key in keys} for ele in self.index]
+        keys = template_to_keys(tmpl)
+        sort_index = [{key:val for key, val in ele.items() if key in keys} for ele in self.index]
         sort_index = sorted(sort_index, key=lambda k: k['database_key']) 
         with open(os.path.join(path, ifile), 'w') as f:
             json.dump({"data": sort_index}, f)
