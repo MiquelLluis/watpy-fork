@@ -203,7 +203,7 @@ class CoRe_idx():
         with open(os.path.join(path, ifile), 'w') as f:
             json.dump({"data": sort_index}, f)
 
-    def to_json_tmplk(self, fname, tmpl = TXT_MAIN, path = None, ifile = None):
+    def to_json_tmplk(self, tmpl = TXT_MAIN, path = None, ifile = None):
         """
         As 'to_json()' but filters the output based on the keys from a template
         """
