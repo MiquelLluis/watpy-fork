@@ -278,7 +278,7 @@ class CoRe_db():
                Defaults to https, which is needed for git-LFS.
                
     """   
-    def __init__(self, db_path, lfs=True, verbose=True, prot='https'):
+    def __init__(self, db_path, lfs=True, verbose=True, prot='https', ifile = 'json/DB_NR.json'):
 
         self.path = db_path
 
@@ -290,7 +290,7 @@ class CoRe_db():
             print("Index found, updating...\n")
             self.pull(lfs = lfs, verbose = verbose)
 
-        self.idb = CoRe_idx(db_path)
+        self.idb = CoRe_idx(db_path, ifile = ifile)
 
         # Simulations
         self.sim = {}
