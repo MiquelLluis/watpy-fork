@@ -140,18 +140,18 @@ class CoRe_h5():
             rad = self.dset_radii(fn,group=group, det=det)
             if group.startswith('rh_'):
                 l,m = self.lm_from_group(group)
-                if(rad==1000):
+                if(rad==1e6):
                     dset = fn[group]['Rh_l{}_m{}_rInf.txt'.format(l,m)][()]
                 else:
                     dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
             elif group.startswith('rpsi4_'):
                 l,m = self.lm_from_group(group)
-                if(rad==1000):
+                if(rad==1e6):
                     dset = fn[group]['Rh_l{}_m{}_rInf.txt'.format(l,m)][()]
                 else:
                     dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
             elif group.startswith('EJ_'):
-                if(rad==1000):
+                if(rad==1e6):
                     dset = fn[group]['EJ__rInf.txt'][()]
                 else:
                     dset = fn[group]['EJ__r{:05d}.txt'.format(int(rad))][()]
@@ -184,7 +184,7 @@ class CoRe_h5():
         for ds in fp[group].keys(): 
             rad_str = ds[-8:-4]
             if(rad_str=='rInf'):
-                radii = np.append(radii,1000)
+                radii = np.append(radii,1e6)
             else:
                 radii = np.append(radii,float(ds[-8:-4]))
         if det in radii:
@@ -205,7 +205,7 @@ class CoRe_h5():
                 for f in fn[group]:
                     rad_str = f[-8:-4]
                     if(rad_str=='rInf'):
-                        rad = 1.0 #for simulations extrapolated at infinity
+                        rad = 1e6 #for simulations extrapolated at infinity
                     else:
                         rad  = float(f[-8:-4])
                     headstr  = "r=%e\nM=%e\n " % (rad, mass)
@@ -230,7 +230,7 @@ class CoRe_h5():
                 for f in fn[group]:
                     rad_str = f[-8:-4]
                     if(rad_str=='rInf'):
-                        rad = 1.0 #for simulations extrapolated at infinity
+                        rad = 1e6 #for simulations extrapolated at infinity
                     else:
                         rad  = float(f[-8:-4])
                     headstr = "r=%e\nM=%e\n " % (rad, mass)
@@ -260,7 +260,7 @@ class CoRe_h5():
             for f in fn[group]:
                 rad_str = f[-8:-4]
                 if(rad_str=='rInf'):
-                    rad = 1.0 #for simulations extrapolated at infinity
+                    rad = 1e6 #for simulations extrapolated at infinity
                 else:
                     rad  = float(f[-8:-4])
                 headstr = "r=%e\nM=%e\n " % (rad, mass)
@@ -300,13 +300,13 @@ class CoRe_h5():
             rad = self.dset_radii(fn,group=group, det=det)
             if group.startswith('rh_'):
                 l,m = self.lm_from_group(group)
-                if(rad==1000):
+                if(rad==1e6):
                     dset = fn[group]['Rh_l{}_m{}_rInf.txt'.format(l,m)]
                 else:
                     dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))] 
             elif group.startswith('rpsi4_'):
                 l,m = self.lm_from_group(group)
-                if(rad==1000):
+                if(rad==1e6):
                     dset = fn[group]['Rpsi4_l{}_m{}_rInf.txt'.format(l,m)]
                 else:
                     dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))]
