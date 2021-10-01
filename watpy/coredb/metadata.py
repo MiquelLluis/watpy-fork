@@ -102,6 +102,18 @@ MDKEYS = {
     'evolution_mol_scheme': 'Time integrator used in the method of line scheme',
     #
     'eos_evolution_Gamma_thermal': 'EOS employed in the evolution or value of the adiabatic exponent for the thermal pressure component',
+    #
+    'id_gw_NR_frequency_Hz': 'Initial frequency of the waveform in Herz',
+    #
+    'Hybrid_window_freq_Hz': 'Frequency window for the hrybrid part of the waveform in Herz',
+    #
+    'TEOB_Lambda_starA': 'Tidal deformability of star A for TEOB waveform',
+    #
+    'TEOB_Lambda_starB': 'Tidal deformability of star B for TEOB waveform',
+    #
+    'TEOB_version': 'version of TEOBResumS used',
+    #
+    'NR_simulation_key': 'database_key of the simulation used, identifying it by the code employed for the evolution, e.g. BAM:0013:R02',
     }
 
 MDKEYS = collections.OrderedDict(MDKEYS)
@@ -181,8 +193,21 @@ evolution_mol_scheme                  = ${evolution_mol_scheme}
 eos_evolution_Gamma_thermal           = ${eos_evolution_Gamma_thermal}
 """
 
+TXT_H="""\
+# -------------------------------
+# Hybrid
+# -------------------------------
+id_gw_NR_frequency_Hz                 = ${id_gw_NR_frequency_Hz}
+Hybrid_window_freq_Hz                 = ${Hybrid_window_freq_Hz}
+TEOB_Lambda_starA                     = ${TEOB_Lambda_starA}
+TEOB_Lambda_starB                     = ${TEOB_Lambda_starB}
+TEOB_version                          = ${TEOB_version}
+NR_simulation_key                     = ${NR_simulation_key}
+"""
+
 TXT_MAIN = TXT_HEAD + TXT_SUBHEAD1 + TXT_SUBHEAD2 + TXT_ID
 TXT = TXT_HEAD + TXT_SUBHEAD2 + TXT_ID + TXT_EV
+TXT_HYB = TXT_MAIN + TXT_H
 
 
 # ------------------------------------------------------------------
