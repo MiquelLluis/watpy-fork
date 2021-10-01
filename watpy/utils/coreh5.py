@@ -140,12 +140,21 @@ class CoRe_h5():
             rad = self.dset_radii(fn,group=group, det=det)
             if group.startswith('rh_'):
                 l,m = self.lm_from_group(group)
-                dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
+                if(rad==1000):
+                    dset = fn[group]['Rh_l{}_m{}_rInf.txt'.format(l,m)][()]
+                else:
+                    dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
             elif group.startswith('rpsi4_'):
                 l,m = self.lm_from_group(group)
-                dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
+                if(rad==1000):
+                    dset = fn[group]['Rh_l{}_m{}_rInf.txt'.format(l,m)][()]
+                else:
+                    dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
             elif group.startswith('EJ_'):
-                dset = fn[group]['EJ__r{:05d}.txt'.format(int(rad))][()]
+                if(rad==1000):
+                    dset = fn[group]['EJ__rInf.txt'][()]
+                else:
+                    dset = fn[group]['EJ__r{:05d}.txt'.format(int(rad))][()]
             else:
                 raise ValueError("Unknown group {}".format(group))
         return np.array(dset)
@@ -173,7 +182,11 @@ class CoRe_h5():
         """
         radii = []
         for ds in fp[group].keys(): 
-             radii = np.append(radii,float(ds[-8:-4]))
+            rad_str = ds[-8:-4]
+            if(rad_str=='rInf'):
+                radii = np.append(radii,1000)
+            else:
+                radii = np.append(radii,float(ds[-8:-4]))
         if det in radii:
             return det
         else:
@@ -190,7 +203,11 @@ class CoRe_h5():
                 group = 'rh_{}{}'.format(l,m)
                 if group not in fn.keys(): continue
                 for f in fn[group]:
-                    rad  = float(f[-8:-4])
+                    rad_str = f[-8:-4]
+                    if(rad_str=='rInf'):
+                        rad = 1.0 #for simulations extrapolated at infinity
+                    else:
+                        rad  = float(f[-8:-4])
                     headstr  = "r=%e\nM=%e\n " % (rad, mass)
                     headstr += "u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8"
                     dset = fn[group][f]
@@ -211,7 +228,11 @@ class CoRe_h5():
                 group = 'rh_{}{}'.format(l,m)
                 if group not in fn.keys(): continue
                 for f in fn[group]:
-                    rad  = float(f[-8:-4])
+                    rad_str = f[-8:-4]
+                    if(rad_str=='rInf'):
+                        rad = 1.0 #for simulations extrapolated at infinity
+                    else:
+                        rad  = float(f[-8:-4])
                     headstr = "r=%e\nM=%e\n " % (rad, mass)
                     dset = fn[group][f]
                     try:
@@ -237,7 +258,11 @@ class CoRe_h5():
                 print("No group {}".format(group))
                 return
             for f in fn[group]:
-                rad  = float(f[-8:-4])
+                rad_str = f[-8:-4]
+                if(rad_str=='rInf'):
+                    rad = 1.0 #for simulations extrapolated at infinity
+                else:
+                    rad  = float(f[-8:-4])
                 headstr = "r=%e\nM=%e\n " % (rad, mass)
                 dset = fn['energy'][f]
                 try:
@@ -275,10 +300,16 @@ class CoRe_h5():
             rad = self.dset_radii(fn,group=group, det=det)
             if group.startswith('rh_'):
                 l,m = self.lm_from_group(group)
-                dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))] 
+                if(rad==1000):
+                    dset = fn[group]['Rh_l{}_m{}_rInf.txt'.format(l,m)]
+                else:
+                    dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))] 
             elif group.startswith('rpsi4_'):
                 l,m = self.lm_from_group(group)
-                dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))]
+                if(rad==1000):
+                    dset = fn[group]['Rpsi4_l{}_m{}_rInf.txt'.format(l,m)]
+                else:
+                    dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))]
             else:
                 raise ValueError("Group {} is now a waveform".format(group))
             x = dset[:,0]
