@@ -8,13 +8,10 @@ FZ 09/2021
 from watpy.coredb.coredb import *
 
 import os
-os.makedirs('./CoRe_DB_clone', exist_ok=True)
-
 db_path = './CoRe_DB_clone/'
-cdb = CoRe_db(db_path)
-
-idb = cdb.idb
+os.makedirs(db_path, exist_ok=True)
 cdb = CoRe_db(db_path, ifile = "json/DB_Hyb.json")
+idb = cdb.idb
 
 print(idb.dbkeys) # show the database_key for each simulation
 
