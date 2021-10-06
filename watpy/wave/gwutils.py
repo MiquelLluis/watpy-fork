@@ -404,7 +404,10 @@ def ret_time(t,r,M=1.):
     """
     Retarded time on Schwarzschild
     """
-    rs = r + 2.*M*np.log(r/(2.*M) -1.)
+    if(r==1.0 or r==-1.0):
+        rs = 0 # For the case when r=-1 (extrapolated at infinity)
+    else:
+        rs = r + 2.*M*np.log(r/(2.*M) -1.)
     return t - rs
 
 

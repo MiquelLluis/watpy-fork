@@ -2,11 +2,54 @@ from ..utils.ioutils import *
 from ..utils.num import diff1, diffo
 from ..utils.viz import wplot
 from .gwutils import fixed_freq_int_2, waveform2energetics, ret_time
+import numpy as np
 
 
 # ------------------------------------------------------------------
 # Routines for waveform files
 # ------------------------------------------------------------------
+
+# Value for extraction radius at infinity
+rInf = -1.
+
+def write_headstr(radius,mass):
+    if(radius==rInf):
+        headstr  = "r=Infinity\nM=%e\n" % (mass)
+    else:
+        headstr  = "r=%e\nM=%e\n" % (radius, mass)
+    return headstr
+
+def write_key(l, m, r):
+    """
+    Writes key string 'l#_m#_r#'
+    """
+    if(r==rInf):
+        key = 'l%d_m%d_rInf' % (l, m)
+    else:
+        key = 'l%d_m%d_r%05d' % (l, m, r)
+    return key
+
+def rinf_float_to_str(radius):
+    """
+    Converts detector radius (float) to string
+    """
+    if(radius==rInf):
+        rad_str = 'Inf'
+    else:
+        rad_str = '%05d' % int(radius)
+    return rad_str
+
+
+def rinf_str_to_float(rad_str):
+    """
+    Converts detector radius (string) to float
+    """
+    opt = ['rInf','Inf','Infinity']
+    if(rad_str in opt):
+        radius = rInf
+    else:
+        radius = float(rad_str)
+    return radius
 
 
 def wave_prop_default():
@@ -33,10 +76,11 @@ def wfile_parse_name(fname):
     fname  : Name of the file to parse for information
     """
     #FIXME: negative modes?!
-    t = ['bam','cactus','core','core-energy']
+    t = ['bam','cactus','core','core','core-energy']
     s = [r'R(\w+)mode(\d)(\d)_r(\d+).l(\d+)',
          r'mp_(\w+)_l(\d)_m(\d)_r(\d+\.\d\d).asc',
          r'R(\w+)_l(\d+)_m(\d+)_r(\d+).txt',
+         r'R(\w+)_l(\d+)_m(\d+)_r(\w+).txt',
          r'EJ_r(\d+).txt']
     vlmr = None
     for tp, sm in zip(t,s):
@@ -44,14 +88,16 @@ def wfile_parse_name(fname):
         if name is not None:
             if tp == 'core-energy':
                 v    = 'EJ'
-                r    = float(name.group(1))
+                #r    = float(name.group(1))
+                r    = rinf_str_to_float(name.group(1))
                 vlmr = (v,None,None,r,tp)
                 return vlmr
             else:
                 v    = name.group(1)
                 l    = int(name.group(2))
                 m    = int(name.group(3))
-                r    = float(name.group(4))
+                #r    = float(name.group(4))
+                r    = rinf_str_to_float(name.group(4))
                 vlmr = (v,l,m,r,tp)
                 return vlmr
     return vlmr
@@ -69,7 +115,13 @@ def wfile_get_detrad(fname):
     fname  : Name of the file to parse for information
     """
     s = extract_comments(fname, '#')
-    return float(re.findall("\d+\.\d+",s[0])[0])
+    #return float(re.findall("\d+\.\d+",s[0])[0])  
+    try:
+        #FIXME: Doesn't identify the exponential, returns only the 1st digit
+        rad_str = re.findall("\d+\.\d+",s[0])[1] 
+    except:
+        rad_str = re.findall("\w+",s[0])[1]
+    return rinf_str_to_float(rad_str)
               
 
 def wfile_get_mass(fname):
@@ -86,7 +138,6 @@ def wfile_get_mass(fname):
 
 # BAM specials
 
-
 def wfile_get_detrad_bam(fname):
     """
     Get radius from wf BAM file header
@@ -97,7 +148,12 @@ def wfile_get_detrad_bam(fname):
     fname  : Name of the file to parse for information
     """
     s = extract_comments(fname, '"')
-    return float(re.findall("\d+\.\d+",s[0])[0])
+    #return float(re.findall("\d+\.\d+",s[0])[0])
+    try:
+        rad_str = re.findall("\d+\.\d+",s[0])[2]
+    except:
+        rad_str = re.findall("\w+",s[0])[2]
+    return rinf_str_to_float(rad_str)
 
 
 # Cactus/THC specials
@@ -121,7 +177,9 @@ def cactus_to_core(path, prop):
     var = np.array([])
     for seg in os.listdir(path):
         if re.match(seg_tmpl, seg):
-            fpath = '/data/mp_Psi4_l%d_m%d_r%.2f.asc' % (l, m, det)
+            key = write_key(l,m,det)
+            fpath = '/data/mp_Psi4_'+key+'.asc'
+            #fpath = '/data/mp_Psi4_l%d_m%d_r%.2f.asc' % (l, m, det)
             raw   = np.loadtxt(os.path.join(path,seg+fpath))
             t     = np.append(t, raw[:,0])
             var   = np.append(var, raw[:,1]+raw[:,2]*1.0j)
@@ -211,7 +269,9 @@ class mwaves(object):
                 self.radii.add(r)
                 #self.dtype.add(tp)
                 
-                key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)                
+                subkey = write_key(l,m,r)
+                key = var+"_"+subkey
+                #key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)                
                 if key in self.data:
                     self.data[key].append(fname)
                 else:
@@ -254,7 +314,9 @@ class mwaves(object):
         if m not in self.mmode:
             raise ValueError("Unknown m-index {}".format(m))
 
-        key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)
+        #key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)
+        subkey = write_key(l,m,r)
+        key = var+"_"+subkey
         return wave(path = self.path, code = self.code, filename = self.data[key][0],
                     mass = self.mass, f0 = self.f0)
 
@@ -284,11 +346,13 @@ class mwaves(object):
             self.jorb = (jadm - self.j) / (m1*m2) 
 
             if path_out:
-                headstr  = "r=%e\nM=%e\n" % (rad, self.mass)
+                #headstr  = "r=%e\nM=%e\n" % (rad, self.mass)
+                headstr  = write_headstr(rad,self.mass)
                 headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4 t:5"
                 data = np.c_[self.jorb, self.eb, u[(2,2)]/self.mass,
                              self.e, self.j, t]
-                fname = "EJ_r%05d.txt" % int(rad)
+                rad_str = rinf_float_to_str(rad)
+                fname = "EJ_r"+rad_str+".txt"
                 np.savetxt('{}/{}'.format(path_out,fname), data, header=headstr)
 
 
@@ -390,13 +454,16 @@ class wave(object):
         """
         M        = self.prop["mass"]
         R        = self.prop['detector.radius']
-        headstr  = "r=%e\n" %(self.prop["detector.radius"])
-        headstr += "M=%e\n" %(M)
+        #headstr  = "r=%e\n" %(self.prop["detector.radius"])
+        #headstr += "M=%e\n" %(M)
+        headstr = write_headstr(R,M)
         if var == 'Psi4':
             headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6"
             data = np.c_[self.time_ret()/M, self.p4.real*R/M, self.p4.imag*R/M, M*self.phase_diff1(var),
                      self.amplitude(var)*R/M, self.phase(var), self.time]
-            fname = 'Rpsi4_l%d_m%d_r%05d.txt' % (self.prop['lmode'], self.prop['mmode'], R)
+            key = write_key(self.prop['lmode'], self.prop['mmode'], R)
+            fname = 'Rpsi4_'+key+'.txt'
+            #fname = 'Rpsi4_l%d_m%d_r%05d.txt' % (self.prop['lmode'], self.prop['mmode'], R)
         else:
             headstr += "u/M:0 Reh/M:1 Imh/M:2 Momega:3 A/M:4 phi:5 t:6"
             data = np.c_[self.time_ret()/M, self.h.real*R/M, self.h.imag*R/M, M*self.phase_diff1(var),
@@ -444,8 +511,8 @@ class wave(object):
         """
         Print the properties
         """
-        for key, vak in self.prop.items():
-            print(key+":"+val)
+        for key, val in self.prop.items():  
+            print(key+":"+str(val))
 
     def prop_set(self, key, val):
         """
@@ -536,7 +603,7 @@ class wave(object):
         """
         Retarded time based on tortoise Schwarzschild coordinate
         """
-        return ret_time(self.time,self.prop["detector.radius"], self.prop["mass"])
+        return ret_time(self.time,np.abs(self.prop["detector.radius"]), self.prop["mass"])
 
     def data_interp1(self, timei, useu=0, kind='linear'):
         """

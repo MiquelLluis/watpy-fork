@@ -12,9 +12,18 @@ import os.path
 import re
 import numpy as np
 
-from ..wave.wave import wfile_parse_name
+from ..wave.wave import wfile_parse_name, rinf_float_to_str, rinf_str_to_float, rInf, write_headstr
 from .viz import wplot
 
+def write_keyh5(l, m, r):
+    """
+    Writes key string 'l#_m#_r#'
+    """
+    if(r==rInf):
+        key = 'l{}_m{}_rInf'.format(l,m)
+    else:
+        key = 'l{}_m{}_r{:05d}'.format(l,m,int(r))
+    return key
 
 class CoRe_h5():
     """
@@ -140,24 +149,25 @@ class CoRe_h5():
             rad = self.dset_radii(fn,group=group, det=det)
             if group.startswith('rh_'):
                 l,m = self.lm_from_group(group)
-                if(rad==1e6):
-                    dset = fn[group]['Rh_l{}_m{}_rInf.txt'.format(l,m)][()]
-                else:
-                    dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
+                key = write_keyh5(l,m,rad)
+                filename = 'Rh_'+key+'.txt'
+                dset = fn[group][filename][()]
+                #dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
             elif group.startswith('rpsi4_'):
                 l,m = self.lm_from_group(group)
-                if(rad==1e6):
-                    dset = fn[group]['Rh_l{}_m{}_rInf.txt'.format(l,m)][()]
-                else:
-                    dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
+                key = write_keyh5(l,m,rad)
+                filename = 'Rpsi4_'+key+'.txt'
+                dset = fn[group][filename][()]
+                #dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))][()]
             elif group.startswith('EJ_'):
-                if(rad==1e6):
-                    dset = fn[group]['EJ__rInf.txt'][()]
-                else:
-                    dset = fn[group]['EJ__r{:05d}.txt'.format(int(rad))][()]
+                rad_str = rinf_float_to_str(rad)
+                filename = 'EJ_r'+rad_str+'.txt'
+                dset = fn[group][filename][()]
+                #dset = fn[group]['EJ__r{:05d}.txt'.format(int(rad)][()]
             else:
                 raise ValueError("Unknown group {}".format(group))
         return np.array(dset)
+
         
     def dump(self):
         """
@@ -182,11 +192,9 @@ class CoRe_h5():
         """
         radii = []
         for ds in fp[group].keys(): 
-            rad_str = ds[-8:-4]
-            if(rad_str=='rInf'):
-                radii = np.append(radii,1e6)
-            else:
-                radii = np.append(radii,float(ds[-8:-4]))
+            rad = rinf_str_to_float(ds[-8:-4])
+            radii = np.append(radii,rad)
+            #radii = np.append(radii,float(ds[-8:-4]))
         if det in radii:
             return det
         else:
@@ -203,12 +211,10 @@ class CoRe_h5():
                 group = 'rh_{}{}'.format(l,m)
                 if group not in fn.keys(): continue
                 for f in fn[group]:
-                    rad_str = f[-8:-4]
-                    if(rad_str=='rInf'):
-                        rad = 1e6 #for simulations extrapolated at infinity
-                    else:
-                        rad  = float(f[-8:-4])
-                    headstr  = "r=%e\nM=%e\n " % (rad, mass)
+                    #rad  = float(f[-8:-4])
+                    rad = rinf_str_to_float(f[-8:-4])
+                    #headstr  = "r=%e\nM=%e\n " % (rad, mass)
+                    headstr = write_headstr(rad,mass)
                     headstr += "u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8"
                     dset = fn[group][f]
                     data = np.c_[dset[:,0],dset[:,1],dset[:,2],
@@ -225,24 +231,22 @@ class CoRe_h5():
         mass = float(self.mdata.data['id_mass'])
         with h5py.File(os.path.join(self.path,self.dfile), 'r') as fn:
             for l,m in lm:
-                group = 'rh_{}{}'.format(l,m)
+                group = 'rpsi4_{}{}'.format(l,m) 
                 if group not in fn.keys(): continue
                 for f in fn[group]:
-                    rad_str = f[-8:-4]
-                    if(rad_str=='rInf'):
-                        rad = 1e6 #for simulations extrapolated at infinity
-                    else:
-                        rad  = float(f[-8:-4])
-                    headstr = "r=%e\nM=%e\n " % (rad, mass)
+                    #rad  = float(f[-8:-4])
+                    #headstr = "r=%e\nM=%e\n " % (rad, mass)
+                    rad = rinf_str_to_float(f[-8:-4])
+                    headstr = write_headstr(rad,mass)
                     dset = fn[group][f]
-                    try:
-                        headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6"
+                    try: 
                         data = np.c_[dset[:,0],dset[:,1],dset[:,2],
-                                     dset[:,3],dset[:,4],dset[:,5],dset[:,6]]
+                                     dset[:,3],dset[:,4],dset[:,5],dset[:,6]]      
+                        headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6" 
                     except:
-                        headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 t:4"
                         data = np.c_[dset[:,0],dset[:,1],dset[:,2],
-                                     dset[:,3]]            
+                                     dset[:,3]]    
+                        headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 t:4"
                     np.savetxt(os.path.join(self.path,f), 
                                data, header=headstr)
 
@@ -258,21 +262,19 @@ class CoRe_h5():
                 print("No group {}".format(group))
                 return
             for f in fn[group]:
-                rad_str = f[-8:-4]
-                if(rad_str=='rInf'):
-                    rad = 1e6 #for simulations extrapolated at infinity
-                else:
-                    rad  = float(f[-8:-4])
-                headstr = "r=%e\nM=%e\n " % (rad, mass)
+                #rad  = float(f[-8:-4])
+                #headstr = "r=%e\nM=%e\n " % (rad, mass)
+                rad = rinf_str_to_float(f[-8:-4])
+                headstr = write_headstr(rad,mass)
                 dset = fn['energy'][f]
                 try:
-                    headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4 t:5"
                     data = np.c_[dset[:,0],dset[:,1],dset[:,2],
                                  dset[:,3],dset[:,4],dset[:,5]]
+                    headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4 t:5"
                 except:
-                    headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4"
                     data = np.c_[dset[:,0],dset[:,1],dset[:,2],
                                  dset[:,3],dset[:,4]]
+                    headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4"
                 np.savetxt(os.path.join(self.path,f), 
                            data, header=headstr)
  
@@ -300,16 +302,16 @@ class CoRe_h5():
             rad = self.dset_radii(fn,group=group, det=det)
             if group.startswith('rh_'):
                 l,m = self.lm_from_group(group)
-                if(rad==1e6):
-                    dset = fn[group]['Rh_l{}_m{}_rInf.txt'.format(l,m)]
-                else:
-                    dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))] 
+                subkey = write_keyh5(l,m,rad)
+                key = 'Rh_'+subkey+'.txt'
+                dset = fn[group][key]
+                #dset = fn[group]['Rh_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))] 
             elif group.startswith('rpsi4_'):
                 l,m = self.lm_from_group(group)
-                if(rad==1e6):
-                    dset = fn[group]['Rpsi4_l{}_m{}_rInf.txt'.format(l,m)]
-                else:
-                    dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))]
+                subkey = write_keyh5(l,m,rad)
+                key = 'Rpsi4_'+subkey+'.txt'
+                dset = fn[group][key]
+                #dset = fn[group]['Rpsi4_l{}_m{}_r{:05d}.txt'.format(l,m,int(rad))]
             else:
                 raise ValueError("Group {} is now a waveform".format(group))
             x = dset[:,0]
