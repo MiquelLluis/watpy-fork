@@ -6,10 +6,11 @@ FZ 09/2021
 """
 
 from watpy.coredb.coredb import *
+import os # mkdirs
 
-import os
 db_path = './CoRe_DB_clone/'
 os.makedirs(db_path, exist_ok=True)
+
 cdb = CoRe_db(db_path, ifile = "json/DB_Hyb.json")
 idb = cdb.idb
 

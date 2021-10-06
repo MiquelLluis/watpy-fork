@@ -11,7 +11,7 @@ import os # mkdirs
 db_path = './CoRe_DB_clone/'
 os.makedirs(db_path, exist_ok=True)
 
-cdb = CoRe_db(db_path)
+cdb = CoRe_db(db_path, ifile = "json/DB_Hyb.json") #Use this for Hybrids!
 idb = cdb.idb
 
 # make sure the DB is up-to-date!
@@ -26,4 +26,4 @@ for key in idb.dbkeys:
 idb.update_from_mdlist(mdlist)
 
 # write the index to JSON with the appropriate template 
-idb.to_json_tmplk()
+idb.to_json_tmplk(tmpl = TXT_HYB)  #Use this for Hybrids!
