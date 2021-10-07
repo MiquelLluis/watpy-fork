@@ -115,13 +115,7 @@ def wfile_get_detrad(fname):
     fname  : Name of the file to parse for information
     """
     s = extract_comments(fname, '#')
-    #return float(re.findall("\d+\.\d+",s[0])[0])  
-    try:
-        #FIXME: Doesn't identify the exponential, returns only the 1st digit
-        rad_str = re.findall("\d+\.\d+",s[0])[1] 
-    except:
-        rad_str = re.findall("\w+",s[0])[1]
-    return rinf_str_to_float(rad_str)
+    return rinf_str_to_float(s[0].split("=")[1])
               
 
 def wfile_get_mass(fname):
