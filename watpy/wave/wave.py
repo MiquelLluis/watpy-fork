@@ -127,7 +127,7 @@ def wfile_get_mass(fname):
     fname  : Name of the file to parse for information
     """
     s = extract_comments(fname, '#')
-    return float(re.findall("\d+\.\d+",s[1])[0])
+    return float(s[1].split("=")[1])
 
 
 # BAM specials
