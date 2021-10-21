@@ -27,6 +27,7 @@ def generate_simulation_name(EOS,MA,MB,SzA,SzB,Momega0,extra=None):
 # NOTE the .txt files in the sim_folder are already in CoRe format. 
 # To generate them from standard BAM or THC output use e.g. watpy's
 # wave() and mwave(). See:
+#  coredb_prerelease_example1.py
 #  tutorials/watpy_wave.ipynb
 sim_folder = '../tutorials/TestData/MySim_THC_135135/CoReDB/'
 
@@ -46,7 +47,7 @@ thcdfiles['rpsi4_22'] = ['Rpsi4_l2_m2_r00400.txt']
 
 # Generate a short and a long `simulation_name` for the two different metadata files
 # IMPORTANT: add to the long name some info on resolution (and other specs) 
-# and, if this is a new simulation, append a tag 'R01' so it is clear this is a run of a simulation
+# and append a tag 'R01' so it is clear this is a run of a simulation
 simname_short = generate_simulation_name('ABC',1.35,1.35,0,0,0.03789461)
 simname_long = generate_simulation_name('ABC',1.35,1.35,0,0,0.03789461,"_R01_0.058_gridX") 
 
