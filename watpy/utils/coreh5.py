@@ -49,7 +49,7 @@ class CoRe_h5():
         - Dasets are named after filenames
         - Appends to and/or overwrites HDF5
         """
-        if path is None: path == self.path
+        if path is None: path = self.path
         if not dfile:
             self.dfile = 'data.h5'
         else:
