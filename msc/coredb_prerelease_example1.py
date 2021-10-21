@@ -28,7 +28,7 @@ def generate_simulation_name(EOS,MA,MB,SzA,SzB,Momega0,extra=None):
 # --------------------------
 
 # NOTE the waveform files in the sim_folder are NOT in CoRe format. 
-# Below mwave() is used to generate data in CoRe format
+# Below, mwaves() is used to generate data in CoRe format
 sim_folder = '../tutorials/TestData/MySim_BAM_135135/'
 
         
@@ -121,7 +121,7 @@ wm = mwaves(path = bamsim['sim-folder'], code = 'bam', filenames = dfiles,
 
 # Write .txt files in CoRe format 
 # Here dump to file only largest radius
-# NOTE: mwave() currently assumes every extraction radius has the same
+# NOTE: mwaves() currently assumes every extraction radius has the same
 # modes. Something to be fixed. 
 for (l,m) in wm.modes:
     psilm = wm.get(var='Psi4',l=l, m=m)
