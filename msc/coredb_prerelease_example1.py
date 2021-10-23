@@ -120,14 +120,14 @@ wm = mwaves(path = bamsim['sim-folder'], code = 'bam', filenames = dfiles,
             ignore_negative_m=True)
 
 # Write .txt files in CoRe format 
-# Here dump to file only largest radius
 # NOTE: mwaves() currently assumes every extraction radius has the same
-# modes. Something to be fixed. 
-for (l,m) in wm.modes:
-    psilm = wm.get(var='Psi4',l=l, m=m)
-    psilm.write_to_txt('Psi4', bamsim['pre-release-folder'])
-    hlm = wm.get(l=l, m=m)
-    hlm.write_to_txt('h', bamsim['pre-release-folder'])
+# modes. 
+for r in wm.radii:
+    for (l,m) in wm.modes:
+        psilm = wm.get(var='Psi4',l=l, m=m, r=r)
+        psilm.write_to_txt('Psi4', bamsim['pre-release-folder'])
+        hlm = wm.get(l=l, m=m)
+        hlm.write_to_txt('h', bamsim['pre-release-folder'])
 
 # Compute and write energetics
 wm.energetics(bamsim['massA'], bamsim['massB'], bamsim['madm'], bamsim['jadm'], 
