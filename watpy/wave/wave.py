@@ -39,18 +39,16 @@ def rinf_float_to_str(radius):
         rad_str = '%05d' % int(radius)
     return rad_str
 
-
 def rinf_str_to_float(rad_str):
     """
     Converts detector radius (string) to float
     """
     opt = ['rInf','Inf','Infinity']
-    if(rad_str in opt):
+    if rad_str in opt:
         radius = rInf
     else:
         radius = float(rad_str)
     return radius
-
 
 def wave_prop_default():
     """
@@ -64,7 +62,6 @@ def wave_prop_default():
         'init.frequency' : None,
         'var': None
     }
-
 
 def wfile_parse_name(fname):
     """
@@ -88,7 +85,6 @@ def wfile_parse_name(fname):
         if name is not None:
             if tp == 'core-energy':
                 v    = 'EJ'
-                #r    = float(name.group(1))
                 r    = rinf_str_to_float(name.group(1))
                 vlmr = (v,None,None,r,tp)
                 return vlmr
@@ -96,7 +92,6 @@ def wfile_parse_name(fname):
                 v    = name.group(1)
                 l    = int(name.group(2))
                 m    = int(name.group(3))
-                #r    = float(name.group(4))
                 r    = rinf_str_to_float(name.group(4))
                 vlmr = (v,l,m,r,tp)
                 return vlmr
@@ -104,7 +99,6 @@ def wfile_parse_name(fname):
 
 
 # CoRe specials
-
 
 def wfile_get_detrad(fname):
     """
@@ -142,7 +136,6 @@ def wfile_get_detrad_bam(fname):
     fname  : Name of the file to parse for information
     """
     s = extract_comments(fname, '"')
-    #return float(re.findall("\d+\.\d+",s[0])[0])
     try:
         rad_str = re.findall("\d+\.\d+",s[0])[2]
     except:
@@ -151,7 +144,6 @@ def wfile_get_detrad_bam(fname):
 
 
 # Cactus/THC specials
-
 
 def cactus_to_core(path, prop):
     """
@@ -208,7 +200,7 @@ class mwaves(object):
     -----------
     Contains
     -----------
-    * vars  : list of variables
+    * vars  : list of variables, ['Psi4', 'h']
     * modes : list of available (l, m) multipoles
     * lmode : list of available l multipoles
     * mmode : list of available m multipoles
@@ -262,10 +254,10 @@ class mwaves(object):
                 self.modes.add((l,m))
                 self.radii.add(r)
                 #self.dtype.add(tp)
-                
+
+                #key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)
                 subkey = write_key(l,m,r)
-                key = var+"_"+subkey
-                #key = "%s_l%d_m%d_r%.2f" % (var, l, m, r)                
+                key = var+"_"+subkey               
                 if key in self.data:
                     self.data[key].append(fname)
                 else:
@@ -319,6 +311,8 @@ class mwaves(object):
         """
         Compute energetics from multipolar waveform
         """
+        #FIXME: this assumes all radii have the same modes!
+        
         h     = {}
         h_dot = {}
         u     = {}
@@ -326,7 +320,7 @@ class mwaves(object):
 
         for rad in radii:
             
-            for lm in self.modes: #FIXME: this assumes all radii have the same modes!
+            for lm in self.modes: 
                 w         = self.get(l=lm[0], m=lm[1], r=rad)
                 t         = w.time
                 u[lm]     = w.time_ret()
@@ -340,7 +334,6 @@ class mwaves(object):
             self.jorb = (jadm - self.j) / (m1*m2) 
 
             if path_out:
-                #headstr  = "r=%e\nM=%e\n" % (rad, self.mass)
                 headstr  = write_headstr(rad,self.mass)
                 headstr += "J_orb:0 E_b:1 u/M:2 E_rad:3 J_rad:4 t:5"
                 data = np.c_[self.jorb, self.eb, u[(2,2)]/self.mass,
@@ -359,8 +352,8 @@ class wave(object):
     Input
     -----------
     path      : Path to the data directory
-    code      : Which code/format the data are saved in (core, cactus, bam)
-    filenames : List of files to be loaded
+    code      : Waveform data format (['bam','cactus','core'])
+    filenames : List of waveform files to be loaded
     mass      : Binary mass (solar masses)
     f0        : Initial gravitational wave frequency of the system (mass rescaled, geom.units)
     -----------
@@ -369,8 +362,6 @@ class wave(object):
     || On initialization ||
     * prop : python dictionary containing the wave properties
     || After reading data ||
-    * e    : Energy
-    * j    : Angular momentum
     * p4   : Psi4 scalar field (complex-valued)
     * h    : Wave strain (complex-valued)
     """
@@ -393,10 +384,7 @@ class wave(object):
             self.prop['init.frequency'] = f0
             if mass:
                 self.prop['mass'] = mass
-            if self.prop['var']=='EJ':
-                self.readEJ(filename)
-            else:
-                self.readtxt(filename)
+            self.readtxt(filename)
 
     def type(self):
         return type(self)
@@ -443,26 +431,27 @@ class wave(object):
         ------
         Input
         -----
-        var  : Which variable to write to txt (Psi4 or h)
+        var  : Which variable to write to txt, ['Psi4', 'h']
         path : Where to save the txt files
         """
         M        = self.prop["mass"]
         R        = self.prop['detector.radius']
-        #headstr  = "r=%e\n" %(self.prop["detector.radius"])
-        #headstr += "M=%e\n" %(M)
         headstr = write_headstr(R,M)
         if var == 'Psi4':
             headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6"
             data = np.c_[self.time_ret()/M, self.p4.real*R/M, self.p4.imag*R/M, M*self.phase_diff1(var),
                      self.amplitude(var)*R/M, self.phase(var), self.time]
             key = write_key(self.prop['lmode'], self.prop['mmode'], R)
-            fname = 'Rpsi4_'+key+'.txt'
             #fname = 'Rpsi4_l%d_m%d_r%05d.txt' % (self.prop['lmode'], self.prop['mmode'], R)
-        else:
+            fname = 'Rpsi4_'+key+'.txt'
+        elif var == 'h':
             headstr += "u/M:0 Reh/M:1 Imh/M:2 Momega:3 A/M:4 phi:5 t:6"
             data = np.c_[self.time_ret()/M, self.h.real*R/M, self.h.imag*R/M, M*self.phase_diff1(var),
                      self.amplitude(var)*R/M, self.phase(var), self.time]
-            fname = 'Rh_l%d_m%d_r%05d.txt' % (self.prop['lmode'], self.prop['mmode'], R)
+            #fname = 'Rh_l%d_m%d_r%05d.txt' % (self.prop['lmode'], self.prop['mmode'], R)
+            fname = 'Rh_'+key+'.txt'
+        else:
+            raise ValueError("var can be only 'Psi4' or 'h'")
         return np.savetxt(os.path.join(path,fname), data, header=headstr)
 
     def show_strain(self, to_file=None):
@@ -493,7 +482,6 @@ class wave(object):
         """
         fname= os.path.join(self.path,filename)
         vlmr = wfile_parse_name(fname)
-
         if vlmr:
             var, l, m, r, tp = vlmr
             self.prop['var']             = var
@@ -549,7 +537,7 @@ class wave(object):
         ------
         Input
         -----
-        var  : Which variable to return (psi4 or h)
+        var  : Which variable to return (Psi4 or h)
         """
         if var=='Psi4':
             return np.abs(self.p4)
@@ -562,7 +550,7 @@ class wave(object):
         ------
         Input
         -----
-        var  : Which variable to return (psi4 or h)
+        var  : Which variable to return (Psi4 or h)
         """
         if var=='Psi4':
             return -np.unwrap(np.angle(self.p4))
@@ -576,7 +564,7 @@ class wave(object):
         ------
         Input
         -----
-        var  : Which variable to return (psi4 or h)
+        var  : Which variable to return (Psi4 or h)
         pad  : Set to True to obtain an array of the same lenght as self.time.
         """
         return diff1(self.time,self.phase(var),pad=pad)
@@ -588,7 +576,7 @@ class wave(object):
         ------
         Input
         -----
-        var  : Which variable to return (psi4 or h)
+        var  : Which variable to return (Psi4 or h)
         o    : Specify order for the finite differencing (defaults to 4)        
         """
         return diffo(self.time,self.phase(var), o)
