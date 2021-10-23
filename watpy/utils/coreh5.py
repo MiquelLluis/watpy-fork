@@ -19,15 +19,27 @@ def write_keyh5(l, m, r):
     """
     Writes key string 'l#_m#_r#'
     """
-    if(r==rInf):
+    if r==rInf:
         key = 'l{}_m{}_rInf'.format(l,m)
     else:
         key = 'l{}_m{}_r{:05d}'.format(l,m,int(r))
     return key
 
-class CoRe_h5():
+
+class CoRe_h5(object):
     """
     Class to read/write CoRe HDF5 archives
+
+    CoRe h5 are simple HDF5 archives made of
+    group/dataset
+
+    The convention for the relevant groups is
+    'rh_{lm}'/     : strain mode {lm}, .e.g 'rh_22'
+    'rpsi4_{lm}'/  : Psi4 mode {lm}, e.g. 'rpsi4_22'
+    'energy'/      : energetics
+
+    The datasets of these groups correspond to waveforms extracted at
+    different extraction radii 
     """ 
     def __init__(self, path, metadata = None, dfile = 'data.h5'):
         self.path  = path
@@ -84,7 +96,7 @@ class CoRe_h5():
         If path is not specified, search the .txt files under self.path
         Always write .h5 files to self.path
 
-        Deprecated, use the create_dset if possible.
+        Deprecated, use create_dset if possible.
         """
         if path is None: path == self.path
         self.dfile = 'data.h5'
@@ -140,7 +152,7 @@ class CoRe_h5():
         --------
         dataset as numpy array
 
-        Deprecated, use the create_dset if possible.
+        Deprecated, use read_dset if possible.
         """
         dset = None
         with h5py.File(os.path.join(self.path,self.dfile), 'r') as fn:
@@ -167,7 +179,6 @@ class CoRe_h5():
             else:
                 raise ValueError("Unknown group {}".format(group))
         return np.array(dset)
-
         
     def dump(self):
         """
