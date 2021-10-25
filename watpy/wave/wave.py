@@ -74,7 +74,7 @@ def wfile_parse_name(fname):
     """
     t = ['bam','cactus','core','core','core-energy']
     s = [r'R(\w+)mode(\d)(\w+)_r(\d+).l(\d+)',
-         r'mp_(\w+)_l(\d)_m(\d)_r(\d+\.\d\d).asc',
+         r'mp_(\w+)_l(\d)_m(.\d|\d)_r(\d+\.\d\d).asc',
          r'R(\w+)_l(\d+)_m(\d+)_r(\d+).txt',
          r'R(\w+)_l(\d+)_m(\d+)_r(\w+).txt',
          r'EJ_r(\d+).txt']
