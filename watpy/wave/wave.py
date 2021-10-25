@@ -72,9 +72,8 @@ def wfile_parse_name(fname):
     -----
     fname  : Name of the file to parse for information
     """
-    #FIXME: negative modes?!
     t = ['bam','cactus','core','core','core-energy']
-    s = [r'R(\w+)mode(\d)(\d)_r(\d+).l(\d+)',
+    s = [r'R(\w+)mode(\d)(\w+)_r(\d+).l(\d+)',
          r'mp_(\w+)_l(\d)_m(\d)_r(\d+\.\d\d).asc',
          r'R(\w+)_l(\d+)_m(\d+)_r(\d+).txt',
          r'R(\w+)_l(\d+)_m(\d+)_r(\w+).txt',
@@ -91,7 +90,7 @@ def wfile_parse_name(fname):
             else:
                 v    = name.group(1)
                 l    = int(name.group(2))
-                m    = int(name.group(3))
+                m    = negmode_bam(name.group(3))
                 r    = rinf_str_to_float(name.group(4))
                 vlmr = (v,l,m,r,tp)
                 return vlmr
@@ -142,6 +141,18 @@ def wfile_get_detrad_bam(fname):
         rad_str = re.findall("\w+",s[0])[2]
     return rinf_str_to_float(rad_str)
 
+def negmode_bam(mode):
+    """
+    Gets the mmode considering the BAM convention
+    used for negative mmodes
+    """
+    try:
+        mod = int(mode)
+    except:
+        name = re.match(r'm(\d)', mode)
+        mod = int(name.group(1))*(-1)
+    return mod
+        
 
 # Cactus/THC specials
 
