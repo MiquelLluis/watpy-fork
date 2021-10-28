@@ -83,7 +83,7 @@ def modes_to_strain(modes,
         if (add_negative_modes):            
             sYlm_neg = spinw_spherical_harm(-2, l, -m, phi, inclination)            
             hlm_neg = (-1)**l * np.conj(hlm) 
-            h += hlm_new * sYlm_neg            
+            h += hlm_neg * sYlm_neg            
     hplus = np.real(h)
     hcross = - np.imag(h)
     return time, hplus, hcross
