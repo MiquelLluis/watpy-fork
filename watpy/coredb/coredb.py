@@ -118,7 +118,7 @@ class CoRe_sim():
         # Need to update also the metadata_main.tex
         if len(r)==1: sep = ''
         else:         sep = ', '
-        self.md.data['available_resolutions'] += sep + r[-1]
+        self.md.data['available_runs'] += sep + r[-1]
         self.write_metadata()
         
     def del_run(self,r):

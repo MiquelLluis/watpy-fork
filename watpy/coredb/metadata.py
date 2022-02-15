@@ -11,9 +11,11 @@ from string import Template
 MDKEYS = {
     'database_key': 'A string like BAM:0001:R01 or THC:0013:R02 that identifies the simulation by the code employed for the evolution and a unique progressive number in the CoRe DB. The first part of the string corresponds to the repository name, like `BAM:0001` or `THC:0013`, and appears in the summary `metadata_main.txt`. The full string includes the different runs (different resolutions, grid setups, hydro scheme, etc.) and appears in the `metadata.txt` inside each run folder',
     #
-    'available_resolutions': 'This is the list of runs (different resolutions, grid setups, hydro scheme, etc.) available for a given simulation, e.g. R01, R02, R03, etc. Note that with "simulation" here we indicate the  set of runs of a given physical setup, i.e. of the same initial data and with the same physical assumptions (e.g. description of matter fields).\n[This field should really be called `available_runs`, to be fixed in the future].',
+    'available_runs': 'This is the list of runs (different resolutions, grid setups, hydro scheme, etc.) available for a given simulation, e.g. R01, R02, R03, etc. Note that with "simulation" here we indicate the  set of runs of a given physical setup, i.e. of the same initial data and with the same physical assumptions (e.g. description of matter fields)',
     #
     'simulation_name': 'A string that identifies the simulated binary. The convention used so far is `<EOS>_<mass1>_<mass2>_<spin1z>_<spin2z>_<initial_frequency>_<setup_details>` formatted as e.g. `2B_1.350_1.350_0.00_0.00_0.038_0.186`. Similarly to the database_key, the first part of this string common to all runs of a simulation appears in the summary `metadata_main.txt`, While the full string appears in the `metadata.txt` inside each run folder',
+    #
+    'binary_type': 'Type of binary: BBH, BNS, or BHNS',
     #
     'reference_bibkeys': 'BibTeX code(s) from HEP-SPIRES referrring to the publication of the simulation.', 
     #
@@ -85,6 +87,8 @@ MDKEYS = {
     #
     'grid_conservative_amr': 'Tells if a refluxing scheme was employed in the simulations',
     #
+    'subgrid_model': 'Subgrid model: None, visL5, visL10, or visK',
+    #
     'metric_scheme': 'Formulation employed for the metric field, e.g. Z4c, BSSN, etc',
     #
     'metric_boundary_conditions': 'Boundary conditions for the metric fields',
@@ -102,6 +106,8 @@ MDKEYS = {
     'evolution_mol_scheme': 'Time integrator used in the method of line scheme',
     #
     'eos_evolution_Gamma_thermal': 'EOS employed in the evolution or value of the adiabatic exponent for the thermal pressure component',
+    #
+    'neutrino_scheme': 'Neutrino scheme: None, Leakage, or M0',
     #
     'id_gw_NR_frequency_Hz': 'Initial frequency of the waveform in Herz',
     #
@@ -129,11 +135,12 @@ database_key            = ${database_key}
 """
 
 TXT_SUBHEAD1="""\
-available_resolutions   = ${available_resolutions}
+available_runs          = ${available_runs}
 """
 
 TXT_SUBHEAD2="""\
 simulation_name         = ${simulation_name}
+binary_type             = ${binary_type}
 reference_bibkeys       = ${reference_bibkeys}
 """
 
@@ -182,6 +189,7 @@ grid_shells                           = ${grid_shells}
 grid_shells_radial_npoints            = ${grid_shells_radial_npoints}
 grid_shells_angular_npoints           = ${grid_shells_angular_npoints}
 grid_conservative_amr                 = ${grid_conservative_amr}
+subgrid_model                         = ${subgrid_model}
 metric_scheme                         = ${metric_scheme}
 metric_boundary_conditions            = ${metric_boundary_conditions}
 hydro_flux                            = ${hydro_flux}
@@ -191,6 +199,7 @@ hydro_atmosphere_factor               = ${hydro_atmosphere_factor}
 number_of_orbits                      = ${number_of_orbits}
 evolution_mol_scheme                  = ${evolution_mol_scheme}
 eos_evolution_Gamma_thermal           = ${eos_evolution_Gamma_thermal}
+neutrino_scheme                       = ${neutrino_scheme}
 """
 
 TXT_H="""\
