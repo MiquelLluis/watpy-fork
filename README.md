@@ -60,3 +60,7 @@ To sync and clone the CoRe DB `watpy` requires a git installation:
  * Wave objects contain already information on merger quantities (time, frequency)
  * Unit conversion package
  * Compatible numerical-relativity file formats: BAM, Cactus (WhiskyTHC / FreeTHC), CoRe database
+
+ ## Versions
+
+Code versions are tagged as `MAJOR.MINOR.PATCH` following [semantic versioning](https://semver.org/)
