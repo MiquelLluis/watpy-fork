@@ -1,9 +1,9 @@
 # Python Waveform Analysis Tools
 
-The [CoRe](http://www.computational-relativity.org/) python package for the analysis of gravitational waves based on
+The [CoRe](http://www.computational-relativity.org/) python package for the analysis of gravitational waves. It incorporates various functions based on previous codes 
 [`scidata`](https://bitbucket.org/dradice/scidata/src/default/),
-[Matlab's `WAT`](https://bitbucket.org/bernuzzi/wat/src/master/) and 
-[`pyGWAnalysis`](http://svn.einsteintoolkit.org/pyGWAnalysis/trunk/) 
+[`WAT`](https://bitbucket.org/bernuzzi/wat/src/master/) and 
+[`pyGWAnalysis`](http://svn.einsteintoolkit.org/pyGWAnalysis/trunk/), and includes classes to work with the [CoRe waveform database](core-gitlfs.tpi.uni-jena.de/). 
 
 ## Installation
 
@@ -50,7 +50,7 @@ To sync and clone the CoRe DB `watpy` requires a git installation:
 ## Features
 
  * Classes for multipolar waveform data
- * Classes to work with the [CoRe database](core-gitlfs.tpi.uni-jena.de/)
+ * Classes to clone the [CoRe database](core-gitlfs.tpi.uni-jena.de/)
  * Gravitational-wave energy and angular momentum calculation routines
  * Psi4-to-h via FFI or time integral routines
  * Waveform alignment and phasing routines
