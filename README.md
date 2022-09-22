@@ -7,6 +7,12 @@ The [CoRe](http://www.computational-relativity.org/) python package for the anal
 
 ## Installation
 
+### PyPi
+
+Run the command `pip install core-watpy`. Note that to use this package one needs to type `watpy` only, e.g. `import watpy`.
+
+### From source
+
 The installation relies on standard Python library `setuptools`.
 Once the repository is cloned, the installation can be performed in two ways,
 depending on the choice of the user:
@@ -24,7 +30,7 @@ The following Python packages are required for installation:
 * [Matplotlib](https://matplotlib.org/) (Nice visualization package)
 * [H5py](https://www.h5py.org/) (Pythonic interface to HDF5)
 
-For users interested in interactive usage of this package we suggest ipyhton notebooks. These can be installed with the following packages:
+For users interested in interactive usage of this package we suggest ipython notebooks. These can be installed with the following packages:
 
 * [iPython](https://ipython.org/) (Strictly better version of the basic python shell)
 * [Jupyter](https://jupyter.org/) (Notebooks, slides, HTML conversion of notebooks and more)
@@ -46,6 +52,10 @@ To sync and clone the CoRe DB `watpy` requires a git installation:
  * `CoRe_run()` to work with one simulation run data in a CoRe repository, see [coredb.py](watpy/coredb/coredb.py)
  * `CoRe_h5()` to work with HDF5 data, see [coredb.py](watpy/utils/coreh5.py)
  * `CoRe_md()` to manage the metadata, see [metadata.py](watpy/codedb/metadata.py)
+
+Please note that in order to use this package one needs to type `watpy` only, e.g. `import watpy`.
+
+See [watpy_CoReDB.ipynb](https://git.tpi.uni-jena.de/core/watpy/-/blob/master/tutorials/watpy_CoReDB.ipynb) and [watpy_wave.ipynb](https://git.tpi.uni-jena.de/core/watpy/-/blob/master/tutorials/watpy_wave.ipynb) for our tutorials on the CoRe DB and waveforms.
 
 ## Features
 
