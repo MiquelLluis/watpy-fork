@@ -13,6 +13,97 @@ except:
 # Waveform analysis utilities
 # ------------------------------------------------------------------
 
+def interp_fd_wave(fnew, f, h, kind = 'quadratic'):
+    """
+        Interpolate frequency-domain waveform
+        
+        * fnew  : New frequency axis
+        * f     : Old frequency axis
+        * h     : Frequency-domain waveform
+        
+        This function returns interpolated frequency-domain waveform
+    """
+    from scipy.interpolate import interp1d
+    a       = np.abs(h)
+    p       = np.unwrap(np.angle(h))
+    anew    = interp1d(f, a, kind=kind, bounds_error=False, fill_value=0.)
+    pnew    = interp1d(f, p, kind=kind, bounds_error=False, fill_value=0.)
+    return anew(fnew) * np.exp(1j*pnew(fnew))
+
+def fft(t, h):
+    """
+        Compute real (fast) Fourier transform
+        Obs. Real FFT assumes that the input signal is real time-series.
+        Analogously, This means that we are considering only positive frequencies (hermitianity).
+        
+        * t : time axis
+        * h : waveform
+        
+        This function returns the frequency axis [Hz] (f>=0) and the Fourier transform of h (complex array)
+    """
+    dt      = t[1]-t[0]
+    hfft    = np.fft.rfft(h) * dt
+    f       = np.fft.rfftfreq(len(h), d=dt)
+    return f, hfft
+
+def match(t1, h1, t2, h2,
+          fpsd = None, psd = None,
+          fmin = None, fmax = None, df = None,
+          interp_kind = 'quadratic'):
+    """
+        Compute match (i.e. fitting factor) between two given waveforms maximizing over time and phase shifts.
+        Obs. This computation assumes that the time axis are equally spaced.
+        Obs. The mismatch (i.e. unfaithfulness) is equal to 1 - match
+        
+        * t1            : Time axis of first waveform in seconds
+        * h1            : Real (or imaginary) part of first waveform evaluated on t1
+        * t2            : Time axis of second waveform in seconds
+        * h2            : Real (or imaginary) part of second waveform evaluated on t2
+        * fpsd          : Frequency axis of the PSD in Hertz (if None, flat PSD is used)
+        * psd           : PSD (if None, flat PSD is used)
+        * fmin          : Minumum integration frequency in Hertz (if None, lowest value is used)
+        * fmax          : Maximum integration frequency in Hertz (if None, highest value is used)
+        * df            : Frequency spacing for interpolation  (if None, lowest value is used)
+        * interp_kind   : Kind of interpolant according to scipy.interp1d (default is quadratic)
+        
+        This function returns the match (i.e. fitting factor)
+    """
+
+    if (len(t1)!=len(h1)):
+        print("Length of first waveform does not match corresponding time axis.")
+        exit()
+    if (len(t2)!=len(h2)):
+        print("Length of second waveform does not match corresponding time axis.")
+        exit()
+
+    # estimate FFTs
+    f1, hf1 = fft(t1, h1)
+    f2, hf2 = fft(t2, h2)
+
+    # define common frequency axis (according to input)
+    if (fmin is None):  fmin    = min([min(f1),min(f2)])
+    if (fmax is None):  fmax    = max([max(f1),max(f2)])
+    if (df is None):    df      = min([f1[1]-f1[0],f2[1]-f2[0]])
+
+    freqs = np.linspace(fmin, fmax, int((fmax-fmin)/df)+1)
+
+    # interpolate over common frequency axis
+    if (psd is None):   _psd    = 1.
+    else:               _psd    = np.interp(freqs, fpsd, psd, right=np.inf, left=np.inf)
+
+    _hf1    = interp_fd_wave(freqs, f1, hf1, kind=interp_kind)
+    _hf2    = interp_fd_wave(freqs, f2, hf2, kind=interp_kind)
+
+    # compute inner products (h1|h1) and (h2|h2)
+    I11     = (np.abs(_hf1)**2/_psd).sum()
+    I22     = (np.abs(_hf2)**2/_psd).sum()
+
+    # compute phi-max and t-max (h1|h2)
+    _I12    = np.conj(_hf1)*_hf2/_psd
+    I12     = np.max(np.abs(np.fft.fft(_I12)))
+
+    # compute match
+    return min([1.,I12/np.sqrt(I11*I22)])
 
 def align_phase(t, Tf, phi_a_tau, phi_b):
     """
