@@ -226,11 +226,18 @@ class CoRe_h5(object):
                     rad = rinf_str_to_float(f[-8:-4])
                     #headstr  = "r=%e\nM=%e\n " % (rad, mass)
                     headstr = write_headstr(rad,mass)
-                    headstr += "u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8"
                     dset = fn[group][f]
-                    data = np.c_[dset[:,0],dset[:,1],dset[:,2],
+                    try:
+                        data = np.c_[dset[:,0],dset[:,1],dset[:,2],
                                  dset[:,3],dset[:,4],dset[:,5],
                                  dset[:,6],dset[:,7],dset[:,8]]
+                        headstr += "u/M:0 Reh/M:1 Imh/M:2 Redh/M:3 Imdh/M:4 Momega:5 A/M:6 phi:7 t:8"
+                    except:
+                        data = np.c_[dset[:,0],dset[:,1],dset[:,2],
+                                 dset[:,3],dset[:,4],dset[:,5],
+                                 dset[:,6]]
+                        headstr += "u/M:0 Reh/M:1 Imh/M:2 Momega:3 A/M:4 phi:5 t:6"
+                        
                     np.savetxt(os.path.join(self.path,f),
                                data, header=headstr)
  
