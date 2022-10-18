@@ -445,18 +445,20 @@ def waveform2energetics(h, h_dot, t, modes, mmodes):
     * modes        : (l,m) indexes
     * mmodes       :   m   indexes
     """
+    print('got in')
     dtime = t[1]-t[0]
-
+    print('step 1')
     E_GW_dot_ff = {}
     E_GW_ff = {}
     J_GW_dot_ff = {}
     J_GW_ff = {}    
     for l, m in modes:
+        print('step 2')
         E_GW_dot_ff[(l,m)] = 1.0/(16.*np.pi) * np.abs(h_dot[l,m])**2 
         E_GW_ff[(l,m)] = num.integrate(E_GW_dot_ff[l,m]) * dtime
         J_GW_dot_ff[(l,m)] = 1.0/(16.*np.pi) * m * np.imag(h[l,m] * np.conj(h_dot[l,m])) 
         J_GW_ff[(l,m)] = num.integrate(J_GW_dot_ff[l,m]) * dtime
-
+    print('step 3')
     E_GW_dot = {}
     E_GW = {}
     J_GW_dot = {}
@@ -466,13 +468,13 @@ def waveform2energetics(h, h_dot, t, modes, mmodes):
         E_GW[m] = np.zeros_like(t)
         J_GW_dot[m] = np.zeros_like(t)
         J_GW[m] = np.zeros_like(t)
-
+    print('step 4')
     for l, m in modes:
         E_GW_dot[m] += mnfactor(m) * E_GW_dot_ff[l,m]
         E_GW[m] += mnfactor(m) * E_GW_ff[l,m]
         J_GW_dot[m] += mnfactor(m) * J_GW_dot_ff[l,m]
         J_GW[m] += mnfactor(m) * J_GW_ff[l,m]
-
+    print('step 5')
     E_GW_dot_all = np.zeros_like(t)
     E_GW_all = np.zeros_like(t)
     J_GW_dot_all = np.zeros_like(t)
