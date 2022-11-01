@@ -72,5 +72,5 @@ See [watpy_CoReDB.ipynb](https://git.tpi.uni-jena.de/core/watpy/-/blob/master/tu
  * Compatible numerical-relativity file formats: BAM, Cactus (WhiskyTHC / FreeTHC), CoRe database
 
  ## Versions
-
+ [![Python version](https://img.shields.io/badge/watpy-v0.1.1-blue)](https://git.tpi.uni-jena.de/core/watpy/-/tree/v0.1.1) 
 Code versions are tagged as `MAJOR.MINOR.PATCH` following [semantic versioning](https://semver.org/)
