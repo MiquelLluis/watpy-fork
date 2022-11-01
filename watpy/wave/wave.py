@@ -1,7 +1,8 @@
 from ..utils.ioutils import *
 from ..utils.num import diff1, diffo
 from ..utils.viz import wplot
-from .gwutils import fixed_freq_int_2, waveform2energetics, ret_time
+from ..utils.units import *
+from .gwutils import fixed_freq_int_2, waveform2energetics, ret_time, spinw_spherical_harm
 import numpy as np
 
 
@@ -353,6 +354,37 @@ class mwaves(object):
                 fname = "EJ_r"+rad_str+".txt"
                 np.savetxt('{}/{}'.format(path_out,fname), data, header=headstr)
 
+    def hlm_to_strain(self,phi=0,inclination=0,add_negative_modes=False):
+        """
+        Build strain from time-domain modes in mass rescaled, geom. units
+        Return result in SI units
+
+        Negative m-modes can be added using positive m-modes, 
+        h_{l-m} = (-)^l h^{*}_{lm}
+        """
+        PC_SI  = 3.085677581491367e+16 # m
+        MPC_SI = 1e6 * PC_SI
+        wave22 = self.get(l=2, m=2)
+        time = wave22.time_ret() * MSun_sec()
+        distance = wave22.prop['detector.radius']*MPC_SI
+        amplitude_prefactor = wave22.prop['mass'] * MSun_meter() / distance
+        h = np.zeros_like( 1j* time  )
+        for (l,m) in self.modes:
+            wavelm = self.get(l=l,m=m)
+            amplitude = wavelm.amplitude(var='h')
+            philm = wavelm.phase(var='h')
+            sYlm = spinw_spherical_harm(-2, l, m, phi, inclination)
+            Alm = amplitude_prefactor * amplitude
+            hlm = Alm * np.exp( - 1j * philm )
+            h += hlm * sYlm
+            if (add_negative_modes):            
+                sYlm_neg = spinw_spherical_harm(-2, l, -m, phi, inclination)            
+                hlm_neg = (-1)**l * np.conj(hlm) 
+                h += hlm_neg * sYlm_neg            
+        hplus = np.real(h)
+        hcross = - np.imag(h)
+        return time, hplus, hcross
+
 
 
 class wave(object):
@@ -623,4 +655,3 @@ class wave(object):
             return win * fixed_freq_int_2( win * self.p4, fcut, dt = dt)
         else:
             return self.h
-

@@ -3,6 +3,7 @@ import scipy as sp
 import math
 from ..utils import num as num 
 import warnings as wrn
+from scipy.special import factorial as fact
 try:
     from scipy import factorial2
 except:  
@@ -12,6 +13,32 @@ except:
 # ------------------------------------------------------------------
 # Waveform analysis utilities
 # ------------------------------------------------------------------
+
+def wigner_d_function(l, m, s, incl):
+    """
+    Wigner-d functions
+    """
+    costheta = np.cos(incl*0.5)
+    sintheta = np.sin(incl*0.5)
+    norm = np.sqrt( (fact(l+m) * fact(l-m) * fact(l+s) * fact(l-s)) )
+    ki = np.amax([0,m-s])
+    kf = np.amin([l+m,l-s])
+    k = np.arange(ki,kf+1)
+    div = 1.0/( fact(k) * fact(l+m-k) * fact(l-s-k) * fact(s-m+k) );
+    dWig = div*( np.power(-1.,k) * np.power(costheta,2*l+m-s-2*k) * np.power(sintheta,2*k+s-m) )
+    return norm * np.sum(dWig)
+
+def spinw_spherical_harm(s, l, m, incl,phi):
+    """ 
+    Spin-weighted spherical harmonics
+    E.g. https://arxiv.org/abs/0709.0093
+    """
+    if ((l<0) or (m<-l) or (m>l)):
+        raise ValueError("wrong (l,m)")
+    c = np.power(-1.,-s) * np.sqrt( (2.*l+1.)/(4.*np.pi) )
+    dWigner = c * wigner_d_function(l,m,-s,incl)
+    exp_mphi = ( np.cos(m*phi) + 1j * np.sin(m*phi) )
+    return dWigner * exp_mphi
 
 def interp_fd_wave(fnew, f, h, kind = 'quadratic'):
     """
@@ -295,7 +322,7 @@ def richardson_extrap_series(p, y, t, h):
     ye = np.zeros(n); err = np.zeros(n)
 
     # interpolate all data sets on time grid of extrapolated result
-    intrp_y = [ num.linterp(te, t[k], y[k]) for k in range(N-1) ]
+    intrp_y = [ np.interp(te, t[k], y[k]) for k in range(N-1) ]
     intrp_y.append(y[-1])
 
     # compute Richardson extrapolation pointwise
@@ -445,20 +472,20 @@ def waveform2energetics(h, h_dot, t, modes, mmodes):
     * modes        : (l,m) indexes
     * mmodes       :   m   indexes
     """
-    print('got in')
+    
     dtime = t[1]-t[0]
-    print('step 1')
+    
     E_GW_dot_ff = {}
     E_GW_ff = {}
     J_GW_dot_ff = {}
     J_GW_ff = {}    
     for l, m in modes:
-        print('step 2')
+        
         E_GW_dot_ff[(l,m)] = 1.0/(16.*np.pi) * np.abs(h_dot[l,m])**2 
         E_GW_ff[(l,m)] = num.integrate(E_GW_dot_ff[l,m]) * dtime
         J_GW_dot_ff[(l,m)] = 1.0/(16.*np.pi) * m * np.imag(h[l,m] * np.conj(h_dot[l,m])) 
         J_GW_ff[(l,m)] = num.integrate(J_GW_dot_ff[l,m]) * dtime
-    print('step 3')
+    
     E_GW_dot = {}
     E_GW = {}
     J_GW_dot = {}
@@ -468,13 +495,13 @@ def waveform2energetics(h, h_dot, t, modes, mmodes):
         E_GW[m] = np.zeros_like(t)
         J_GW_dot[m] = np.zeros_like(t)
         J_GW[m] = np.zeros_like(t)
-    print('step 4')
+    
     for l, m in modes:
         E_GW_dot[m] += mnfactor(m) * E_GW_dot_ff[l,m]
         E_GW[m] += mnfactor(m) * E_GW_ff[l,m]
         J_GW_dot[m] += mnfactor(m) * J_GW_dot_ff[l,m]
         J_GW[m] += mnfactor(m) * J_GW_ff[l,m]
-    print('step 5')
+    
     E_GW_dot_all = np.zeros_like(t)
     E_GW_all = np.zeros_like(t)
     J_GW_dot_all = np.zeros_like(t)

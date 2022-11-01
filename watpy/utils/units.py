@@ -5,10 +5,14 @@
 
 uts= {
   'Msun_sec': 4.925794970773135e-06,
+  'Msun_meter': 1.476625061404649406193430731479084713e3
 }
 
 def MSun_sec():
   return uts['Msun_sec']
+
+def MSun_meter():
+    return uts['Msun_meter']
 
 
 # For plots:
