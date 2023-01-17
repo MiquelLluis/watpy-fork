@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+title: core-watpy
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: The CoRe Collaboration
+    email: core@listserv.uni-jena.de
+identifiers:
+  - type: url
+    value: 'https://arxiv.org/abs/2210.16366'
+repository-code: 'https://git.tpi.uni-jena.de/core/watpy'
+url: 'http://www.computational-relativity.org/'
+abstract: >-
+  The CoRe python package for the analysis of gravitational
+  waves. It incorporates various functions based on previous
+  codes scidata, WAT and pyGWAnalysis, and includes classes
+  to work with the CoRe waveform database.
+license: GPL-3.0-or-later
+commit: 38f7d7bd
+version: 0.1.1
+date-released: '2022-11-01'
