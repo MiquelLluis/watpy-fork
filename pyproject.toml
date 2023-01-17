@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "core-watpy"
-version = "0.0.1"
+version = "0.1.1"
 authors = [
   { name="The CoRe Team", email="core@listserv.uni-jena.de" },
 ]
