@@ -483,8 +483,8 @@ class wave(object):
         key = write_key(self.prop['lmode'], self.prop['mmode'], R)
         if var == 'Psi4':
             headstr += "u/M:0 RePsi4/M:1 ImPsi4/M:2 Momega:3 A/M:4 phi:5 t:6"
-            data = np.c_[self.time_ret()/M, self.p4.real*R/M, self.p4.imag*R/M, M*self.phase_diff1(var),
-                     self.amplitude(var)*R/M, self.phase(var), self.time]
+            data = np.c_[self.time_ret()/M, self.p4.real/M, self.p4.imag/M, M*self.phase_diff1(var),
+                     self.amplitude(var)/M, self.phase(var), self.time]
             #fname = 'Rpsi4_l%d_m%d_r%05d.txt' % (self.prop['lmode'], self.prop['mmode'], R)
             fname = 'Rpsi4_'+key+'.txt'
         elif var == 'h':
