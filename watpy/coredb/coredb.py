@@ -78,7 +78,7 @@ class CoRe_sim():
         for r in os.listdir(self.path):
             if r[0]=='R' and len(r)==3:
                 self.run[r] = CoRe_run(os.path.join(self.path, r))
-                print(' Found {}'.format(r))
+                # print(' Found {}'.format(r))
         if not self.run:
             print(' Found no runs ''R??'' folders in {}'.format(self.path))
 
@@ -356,9 +356,10 @@ class CoRe_db():
             dbk = k.replace('_',':')
             if dbk in self.idb.dbkeys:
                 self.sim[dbk] = CoRe_sim(os.path.join(self.path,k))
-                print('Found {}'.format(dbk))
+                # print('Found {}'.format(dbk))
             else:
-                print('skip {}, not a DB key'.format(k))
+                # print('skip {}, not a DB key'.format(k))
+                pass
 
     def update_simulations_from_dbkeys(self):
         """
