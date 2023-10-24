@@ -45,8 +45,8 @@ class CoRe_h5(object):
         self.path  = path
         self.mdata = metadata # needed only in create/write
         self.dfile = dfile
-        if not os.path.isfile(os.path.join(path,dfile)):
-            print("No .h5 file found!")
+        # if not os.path.isfile(os.path.join(path,dfile)):
+        #     print("No .h5 file found!")
 
     def create_dset(self, datain, path = None, dfile = None):
         """
