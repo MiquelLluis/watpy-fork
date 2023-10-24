@@ -306,7 +306,7 @@ def dd_find(ddic, key, val):
 #---------------------------------------------------------------------------
 
 
-def runcmd(cmd, workdir, out, verbose=False):
+def runcmd(cmd, workdir, out, verbose=False, env=None):
     """
     Given a command and a working directory, run the command
     from the bash shell in the given directory.
@@ -317,6 +317,7 @@ def runcmd(cmd, workdir, out, verbose=False):
     workdir  : Directory where to run the command
     out      : If not None, standard output/error are given as output
     verbose  : If True, print more information on screen while running.
+    env      : MIQUEL: Allow to locally modify ENV variables.
 
     --------
     Output:
@@ -325,7 +326,7 @@ def runcmd(cmd, workdir, out, verbose=False):
     sl_err   : Standard error from the bash command
     """
     proc = Popen(cmd, cwd=workdir, stdout=PIPE,
-                 stderr=PIPE, universal_newlines=True)
+                 stderr=PIPE, universal_newlines=True, env=env)
     if verbose:
         sl_out = []
         while True:
@@ -366,16 +367,23 @@ def git_clone(path = '.',
     git_repo = '{}{}{}{}/{}.git'.format(pre[protocol],server,
                                        sep[protocol],gitbase,repo)
     print('git-clone {} ...'.format(git_repo))
+    #<<<
+    # MIQUEL: Mod to ignore the SSL (CA file) certificate
+    #
+    myenv = os.environ.copy()
+    myenv["GIT_SSL_NO_VERIFY"] = "true"
     if lfs:
         # 'git lfs clone' is deprecated and will not be updated
         #  with new flags from 'git clone'
-        out, err = runcmd(['git','lfs', 'clone',git_repo],path,True)
+        out, err = runcmd(['git','lfs', 'clone',git_repo],path,True, env=myenv)
         #
     else:
-        out, err = runcmd(['git','clone', git_repo],path, True)
+        out, err = runcmd(['git','clone', git_repo],path, True, env=myenv)
+    #
+    #>>>
     if verbose:
         print(out, err)
-    print('done!')
+        print('done!')
 
 
 def git_pull(path = '.',
@@ -386,7 +394,7 @@ def git_pull(path = '.',
     Pulls changes in a git repository located in a path
     """
     workdir = os.path.join(path, repo)
-    print('git-pull {} ...'.format(repo))
+    if verbose: print('git-pull {} ...'.format(repo))
     if lfs:
         out, err = runcmd(['git', 'lfs', 'install'], workdir, True)
         out, err = runcmd(['git', 'lfs', 'pull', 'origin', 'master'], workdir, True)
@@ -394,4 +402,4 @@ def git_pull(path = '.',
         out, err = runcmd(['git', 'pull', 'origin', 'master'], workdir, True)
     if verbose:
         print(out, err)
-    print('done!')
+        print('done!')
