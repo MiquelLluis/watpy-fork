@@ -466,7 +466,7 @@ class wave(object):
             self.h    = np.array(re) + 1j *np.array(im)
             rp4, ip4  = np.loadtxt(os.path.join(self.path,fname.replace('Rh', 'Rpsi4')),
                                    unpack=True, usecols=[1,2])
-            self.p4   = np.array(re) + 1j *np.array(im)
+            self.p4   = np.array(rp4) + 1j *np.array(ip4)
 
     def write_to_txt(self, var, path):
         """ 
